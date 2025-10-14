@@ -60,6 +60,11 @@ documentation = [
   "pymdown-extensions>=10.7.1",
 ]
 
+[tool.hatch.build.targets.sdist]
+include = [
+  "src/ktcalendars/*.py",
+]
+
 [tool.pytest.ini_options]
 addopts = [
   "--import-mode=importlib",
