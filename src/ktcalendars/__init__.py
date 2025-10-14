@@ -8,7 +8,7 @@ from calendar import Calendar
 
 __author__ = "Giovanni Bronzini"
 __version__ = "0.8.0"
-__name__ = "ktcalendar"
+__name__ = "ktcalendars"
 
 
 try:

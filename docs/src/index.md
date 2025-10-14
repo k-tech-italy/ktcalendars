@@ -2,7 +2,7 @@
 title: Documentation
 ---
 
-KTCalendar is a library providing utility classes for advanced Holiday management.
+KTCalendars is a library providing utility classes for advanced Holiday management.
 
 
 ## Dependencies

@@ -1,13 +1,13 @@
 # django-temporary-permissions
 
 <!--
-[![Test](https://github.com/k-tech-italy/ktcalendar/actions/workflows/test.yml/badge.svg)](https://github.com/k-tech-italy/ktcalendar/actions/workflows/test.yml)
-[![Lint](https://github.com/k-tech-italy/ktcalendar/actions/workflows/lint.yml/badge.svg)](https://github.com/k-tech-italy/ktcalendar/actions/workflows/lint.yml)
-[![Documentation](https://github.com/k-tech-italy/django_temporary_permissions/actions/workflows/docs.yml/badge.svg)](https://github.com/k-tech-italy/ktcalendar/actions/workflows/docs.yml)
-[![codecov](https://codecov.io/github/k-tech-italy/ktcalendar/graph/badge.svg?token=BNXEW4JAYF)](https://codecov.io/github/k-tech-italy/ktcalendar)
+[![Test](https://github.com/k-tech-italy/ktcalendars/actions/workflows/test.yml/badge.svg)](https://github.com/k-tech-italy/ktcalendars/actions/workflows/test.yml)
+[![Lint](https://github.com/k-tech-italy/ktcalendars/actions/workflows/lint.yml/badge.svg)](https://github.com/k-tech-italy/ktcalendars/actions/workflows/lint.yml)
+[![Documentation](https://github.com/k-tech-italy/ktcalendars/actions/workflows/docs.yml/badge.svg)](https://github.com/k-tech-italy/ktcalendars/actions/workflows/docs.yml)
+[![codecov](https://codecov.io/github/k-tech-italy/ktcalendars/graph/badge.svg?token=BNXEW4JAYF)](https://codecov.io/github/k-tech-italy/ktcalendars)
 [![security: bandit](https://img.shields.io/badge/security-bandit-yellow.svg)](https://github.com/PyCQA/bandit)
-[![Pypi](https://badge.fury.io/py/ktcalendar.svg)](https://badge.fury.io/py/ktcalendar)
-[![coverage](https://codecov.io/github/k-tech-italy/ktcalendar/coverage.svg?branch=develop)](https://codecov.io/github/k-tech-italy/ktcalendar?branch=develop)
+[![Pypi](https://badge.fury.io/py/ktcalendars.svg)](https://badge.fury.io/py/ktcalendars)
+[![coverage](https://codecov.io/github/k-tech-italy/ktcalendars/coverage.svg?branch=develop)](https://codecov.io/github/k-tech-italy/ktcalendars?branch=develop)
 -->
 
 
@@ -21,9 +21,9 @@ KTCalendar is a library providing utility classes for country-specific holiday-a
 
 ## Installation
 
-* Install ktcalendar using your package manager of choice, e.g. Pip:
+* Install ktcalendars using your package manager of choice, e.g. Pip:
   ```bash
-  pip install ktcalendar
+  pip install ktcalendars
   ```
 
 ## Bug reports and requests for enhancements

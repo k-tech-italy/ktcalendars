@@ -2,12 +2,12 @@ copyright: Copyright &copy; 2025 KTech
 dev_addr: 127.0.0.1:8001
 docs_dir: docs/src
 edit_uri: 'blob/develop/docs/'
-repo_url: https://github.com/k-tech-italy/ktcalendar
+repo_url: https://github.com/k-tech-italy/ktcalendars
 site_author: KTech
 site_description: ""
 site_dir: ./~build/docs
 site_name: django-temporary-permissions
-site_url: https://k-tech-italy.github.io/k-tech-italy/ktcalendar/
+site_url: https://k-tech-italy.github.io/k-tech-italy/ktcalendars/
 strict: false
 
 theme:

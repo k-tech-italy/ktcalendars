@@ -2,7 +2,7 @@
 title: Getting started
 ---
 
-# How to use ktcalendar
+# How to use ktcalendars
 
 ## Configuration
 
