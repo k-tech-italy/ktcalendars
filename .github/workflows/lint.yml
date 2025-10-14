@@ -1,0 +1,29 @@
+name: Lint
+
+on:
+  push:
+    branches:
+      - '**'
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}-lint"
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python environment
+        uses: ./.github/actions/python-uv-setup
+
+      - uses: astral-sh/ruff-action@v3
+        with:
+          args: "format --check --diff"
+          version-file: "pyproject.toml"

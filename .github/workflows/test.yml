@@ -1,0 +1,99 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - '**'
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}-test"
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    name: Test py${{ matrix.python-version }}
+    strategy:
+      max-parallel: 1
+      matrix:
+        python-version: [ '3.13', '3.12', '3.11', '3.10' ]
+      fail-fast: true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: 'x64'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: latest
+          enable-cache: true
+          prune-cache: false
+          cache-local-path: ./uv-cache
+
+      - name: Restore cached vEnv
+        id: cache-venv-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ./uv-cache
+            ./.venv
+          key: ${{ runner.os }}-py${{ matrix.python-version }}-venv-${{ hashFiles('**/pyproject.toml', '**/uv.lock') }}
+
+      - name: Sync dependencies
+        run: uv sync --cache-dir ./uv-cache --frozen
+
+      - name: Save vEnv
+        if: steps.cache-venv-restore.outputs.cache-hit != 'true'
+        id: cache-venv-save
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ./uv-cache
+            ./.venv
+          key: ${{ steps.cache-venv-restore.outputs.cache-primary-key }}
+
+      - name: Test
+        run: |
+          uv run --cache-dir ./uv-cache \
+              pytest tests \
+                --junit-xml junit-${{ matrix.python-version }}.xml \
+                --cov --cov-report xml
+
+      - name: Upload pytest test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-results-${{ matrix.python-version }}
+          path: junit-${{ matrix.python-version }}.xml
+        if: ${{ always() }}
+
+      - name: Upload coverage to Codecov
+        if: env.CODECOV_TOKEN
+        uses: codecov/codecov-action@v4
+        continue-on-error: true
+        with:
+          env_vars: OS,PYTHON
+          fail_ci_if_error: true
+          flags: unittests
+          files: ./coverage.xml
+          verbose: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+          name: codecov-${{ github.ref_name }}
+
+      - name: Upload coverage to GitHub (fallback)
+        if: env.CODECOV_TOKEN
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ github.ref_name }}-${{ matrix.python-version }}
+          path: coverage.xml

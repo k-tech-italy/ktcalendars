@@ -1,0 +1,45 @@
+name: "Setup Python environment with uv"
+description: "Reusable uv + cache setup that respects pyproject.toml"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v6
+      with:
+        version: latest
+        enable-cache: true
+        prune-cache: false
+        cache-local-path: ./uv-cache
+        cache-dependency-glob: |
+          **/pyproject.toml
+          **/uv.lock
+        activate-environment: true
+
+    - name: Restore cached vEnv
+      id: cache-venv-restore
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          ./uv-cache
+          ./.venv
+        key: ${{ runner.os }}-venv-${{ hashFiles('**/pyproject.toml', '**/uv.lock') }}
+
+    - name: Sync dependencies
+      run: uv sync --cache-dir ./uv-cache --frozen
+      shell: bash
+
+    - name: Save vEnv
+      if: steps.cache-venv-restore.outputs.cache-hit != 'true'
+      id: cache-venv-save
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          ./uv-cache
+          ./.venv
+        key: ${{ steps.cache-venv-restore.outputs.cache-primary-key }}

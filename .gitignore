@@ -5,6 +5,7 @@
 !.pre-commit-config.yaml
 !.mypy.ini
 !.cz.toml
+!.github
 
 *.egg-info
 
