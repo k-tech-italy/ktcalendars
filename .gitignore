@@ -6,6 +6,7 @@
 !.mypy.ini
 !.cz.toml
 !.github
+!.secrets.baseline
 
 *.egg-info
 

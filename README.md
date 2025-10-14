@@ -11,7 +11,7 @@
 -->
 
 
-KTCalendar is a library providing utility classes for country-specific holiday-aware calendars and dates. 
+KTCalendar is a library providing utility classes for country-specific holiday-aware calendars and dates.
 
 
 ## Dependencies
@@ -37,4 +37,3 @@ See the [contribution guide](CONTRIBUTING.md).
 ## Licensing
 
 All rights reserved.
-

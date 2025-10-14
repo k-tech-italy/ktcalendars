@@ -279,7 +279,7 @@ class KTCalendar(Calendar):
 
 def get_country_holidays(country_calendar_code: str | None = None) -> holidays.HolidayBase:
     """Generate the appropriate country holidays."""
-    hol_calendar = country_calendar_code or os.environ.get("DEFAULT_HOLIDAYS_CALENDAR", "GB-ENG")
+    hol_calendar = country_calendar_code or os.environ.get("DEFAULT_HOLIDAYS_CALENDAR") or "GB-ENG"
     subdiv = None
     if "-" in hol_calendar:
         country, subdiv = hol_calendar.split("-")

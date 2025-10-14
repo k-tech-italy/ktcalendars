@@ -1,21 +1,27 @@
+[build-system]
+build-backend = "hatchling.build"
+requires = [
+  "hatch-vcs>=0.4",
+  "hatchling>=1.25",
+]
+
 [project]
 name = "ktcalendars"
 version = "0.8.0"
 description = ""
 readme = "README.md"
-requires-python = ">=3.10"
 license = "Apache-2.0"
 license-files = [ "NOTICE.md", "LICENSE.md" ]
+requires-python = ">=3.10"
 classifiers = [
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
-  "holidays"
+  "holidays",
 ]
 
 [dependency-groups]
@@ -54,10 +60,10 @@ documentation = [
   "pymdown-extensions>=10.7.1",
 ]
 
-[tool.uv]
-default-groups = [ "dev", "checks" ]
-
 [tool.pytest.ini_options]
 addopts = [
-    "--import-mode=importlib",
+  "--import-mode=importlib",
 ]
+
+[tool.uv]
+default-groups = [ "dev", "checks" ]
