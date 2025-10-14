@@ -105,7 +105,7 @@ exclude = [
 ]
 
 [format]
-quote-style = "double"
+quote-style = "preserve"
 indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "auto"

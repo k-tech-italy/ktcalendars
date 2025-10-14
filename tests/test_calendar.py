@@ -105,11 +105,11 @@ class TestKTDay:
         ]
 
     def test_range_to_nok(self):
-        with (pytest.raises(ValueError, match="Start date cannot be later than end date.")):
+        with pytest.raises(ValueError, match="Start date cannot be later than end date."):
             list(KTDay('2024-02-28').range_to(KTDay('2024-02-27')))
 
     def test_invalid(self):
-        with (pytest.raises(ValueError, match="Invalid date: 'dummy'")):
+        with pytest.raises(ValueError, match="Invalid date: 'dummy'"):
             KTDay('dummy')
 
     @freezegun.freeze_time('2025-03-02')
@@ -137,13 +137,13 @@ class TestKTCalendar:
     def test_itermonthdates(self):
         cal = KTCalendar()
         assert [kd.day for kd in cal.itermonthdates(2025, 6)] == (
-                list(range(26, 32)) + list(range(1, 31)) + list(range(1, 7))
+            list(range(26, 32)) + list(range(1, 31)) + list(range(1, 7))
         )
 
     def test_itermonthdays(self):
         cal = KTCalendar()
         assert [kd.day if kd else None for kd in cal.itermonthktdays(2025, 6)] == (
-                [None for _ in range(26, 32)] + list(range(1, 31)) + [None for _ in range(1, 7)]
+            [None for _ in range(26, 32)] + list(range(1, 31)) + [None for _ in range(1, 7)]
         )
 
     @pytest.mark.parametrize(
@@ -184,17 +184,24 @@ class TestKTCalendar:
     @pytest.mark.parametrize(
         'start, end, country_code, expectation, result',
         [
-            pytest.param('2025-07-11', '2025-07-15', None, does_not_raise(), ['2025-07-11', '2025-07-14', '2025-07-15'],
-                         id='3wd'),
+            pytest.param(
+                '2025-07-11', '2025-07-15', None, does_not_raise(), ['2025-07-11', '2025-07-14', '2025-07-15'], id='3wd'
+            ),
             pytest.param('2025-07-11', '2025-07-13', None, does_not_raise(), ['2025-07-11'], id='1wd'),
             pytest.param('2025-07-12', '2025-07-13', None, does_not_raise(), [], id='no-wd'),
             pytest.param('2025-06-01', '2025-06-03', 'IT-RM', does_not_raise(), ['2025-06-03'], id='ita'),
             # 2025-06-02 italian bank holiday
             pytest.param('2025-06-01', '2025-06-03', None, does_not_raise(), ['2025-06-02', '2025-06-03'], id='ita'),
             # 2025-06-02 italian bank holiday
-            pytest.param('2025-06-02', '2025-06-01', None,
-                         pytest.raises(ValueError, match='Start date cannot be after end date.'), None, id='invalid')
-        ]
+            pytest.param(
+                '2025-06-02',
+                '2025-06-01',
+                None,
+                pytest.raises(ValueError, match='Start date cannot be after end date.'),
+                None,
+                id='invalid',
+            ),
+        ],
     )
     def test_get_work_days(self, start, end, country_code, expectation, result):
         cal = KTCalendar(country_code=country_code)
