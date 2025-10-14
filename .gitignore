@@ -1,0 +1,11 @@
+.*
+~*
+!.gitignore
+!.*.example
+!.pre-commit-config.yaml
+!.mypy.ini
+!.cz.toml
+
+*.egg-info
+
+coverage.xml
