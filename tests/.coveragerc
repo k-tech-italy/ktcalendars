@@ -34,6 +34,7 @@ exclude_lines =
     self.halt\(.*
     @abc.abstractmethod
     @abstractmethod
+    override = lambda _func: _func
 
 
 fail_under=90

@@ -207,3 +207,10 @@ class TestKTCalendar:
         cal = KTCalendar(country_code=country_code)
         with expectation:
             assert cal.get_work_days(start, end) == [KTDay(x) for x in result]
+
+    def test_default_calendar(self):
+        uk_cal = KTCalendar()
+        rm_cal = type("KTCalendar", (KTCalendar,), {'get_default_country_code': staticmethod(lambda *args: 'IT-RM')})()
+
+        assert list(rm_cal.itermonthktdays(2025, 5))[28].is_holiday() is False
+        assert list(uk_cal.itermonthktdays(2025, 5))[28].is_holiday() is True # The last Monday in May is a bank holiday
