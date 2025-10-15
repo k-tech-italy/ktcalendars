@@ -11,6 +11,11 @@ jobs:
     name: Build distribution 📦
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Setup Python environment
         uses: ./.github/actions/python-uv-setup
 
