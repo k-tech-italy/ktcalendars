@@ -65,6 +65,10 @@ class TestKTDay:
         assert KTDay('2025-06-02') - KTDay('2025-06-02') == 0
         assert KTDay('2024-02-28') - KTDay('2024-03-01') == -2
         assert KTDay('2024-03-01') - KTDay('2024-02-28') == +2
+        assert KTDay('2025-06-02') - 2 == KTDay('2025-05-31')
+        assert KTDay('2025-06-03') - datetime.timedelta(days=3) == KTDay('2025-05-31')
+        assert KTDay('2025-06-03') - relativedelta(months=1, days=1, years=1) == KTDay('2024-05-02')
+        assert KTDay('2025-06-03') - datetime.date(2025, 6, 1) == 2
 
     def test_add_days(self):
         assert KTDay('2024-02-28') + 2 == KTDay('2024-03-01')
@@ -136,7 +140,7 @@ class TestKTDay:
 class TestKTCalendar:
     def test_itermonthdates(self):
         cal = KTCalendar()
-        assert [kd.day for kd in cal.itermonthdates(2025, 6)] == (
+        assert [kd.day for kd in cal.itermonthktdates(2025, 6)] == (
             list(range(26, 32)) + list(range(1, 31)) + list(range(1, 7))
         )
 
@@ -207,3 +211,12 @@ class TestKTCalendar:
         cal = KTCalendar(country_code=country_code)
         with expectation:
             assert cal.get_work_days(start, end) == [KTDay(x) for x in result]
+
+    def test_default_calendar(self):
+        uk_cal = KTCalendar()
+        rm_cal = type("KTCalendar", (KTCalendar,), {'get_default_country_code': staticmethod(lambda *args: 'IT-RM')})()
+
+        assert list(rm_cal.itermonthktdays(2025, 5))[28].is_holiday() is False
+        assert (
+            list(uk_cal.itermonthktdays(2025, 5))[28].is_holiday() is True
+        )  # The last Monday in May is a bank holiday

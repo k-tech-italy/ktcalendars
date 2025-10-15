@@ -8,7 +8,6 @@ from calendar import Calendar
 
 __author__ = "Giovanni Bronzini"
 __version__ = "0.8.0"
-__name__ = "ktcalendars"
 
 
 try:
@@ -56,8 +55,19 @@ class KTDay:
     extra_holiday_provider = ExtraHolidayProvider
     non_working_days = ["Sat", "Sun"]
 
-    def __init__(self, day: KTDay | datetime.date | str | None = None, **kwargs: dict) -> None:
+    def __init__(
+        self, day: KTDay | datetime.date | str | None = None, ktcalendar: KTCalendar | None = None, **kwargs: dict
+    ) -> None:
+        """Initialize a KTDay.
+
+        If the country_code is provided, it will be used as the default country_code.
+        """
         self.date: datetime.date
+        self.ktcalendar: KTCalendar | None = ktcalendar
+        if ktcalendar:
+            self.country_code: str | None = ktcalendar.country_calendar_code
+        else:
+            self.country_code = None
         if day is None:
             day = datetime.date.today()
         if isinstance(day, KTDay):
@@ -70,6 +80,15 @@ class KTDay:
                 raise ValueError(f"Invalid date: {day!r}")
             self.date = parsed_date
         self.__dict__.update(kwargs)
+
+    def get_country_code(self) -> str:
+        """Return the country code in use for the KTDay.
+
+        Falls back to the default country code of the KTCalendar class.
+        """
+        if self.country_code is None:
+            return KTCalendar.get_default_country_code()
+        return self.country_code
 
     @property
     def day(self) -> int:
@@ -96,13 +115,17 @@ class KTDay:
         """Return the calendar week of the year for the day."""
         return self.date.isocalendar()[1]
 
-    def is_extra_holiday(self, country_calendar_code: str) -> bool:
+    def is_extra_holiday(self, country_calendar_code: str | None = None) -> bool:
         """Return True if this day is an extra holiday."""
+        if country_calendar_code is None:
+            country_calendar_code = self.get_country_code()
         return self.extra_holiday_provider.is_extra_holiday(self, country_calendar_code)
 
     def is_holiday(self, country_calendar_code: str | None = None, include_sundays_as_holiday: bool = True) -> bool:
         """Return True if this day is a holiday."""
-        if country_calendar_code and self.is_extra_holiday(country_calendar_code):
+        if country_calendar_code is None:
+            country_calendar_code = self.get_country_code()
+        if self.is_extra_holiday(country_calendar_code):
             return True
         if include_sundays_as_holiday:
             return not get_country_holidays(country_calendar_code=country_calendar_code).is_working_day(self.date)
@@ -110,6 +133,8 @@ class KTDay:
 
     def is_non_working_day(self, country_calendar_code: str | None = None) -> bool:
         """Return true if it is a non working day."""
+        if country_calendar_code is None:
+            country_calendar_code = self.get_country_code()
         return self.day_of_week_short in self.non_working_days or self.is_holiday(
             country_calendar_code=country_calendar_code
         )
@@ -145,7 +170,8 @@ class KTDay:
             yield self + i
 
     def __eq__(self, __value: object) -> bool:
-        if not isinstance(__value, (KTDay, datetime.date, str)):
+        """Return True if this day is equal to the given day."""
+        if not isinstance(__value, KTDay | datetime.date | str):
             raise NotImplementedError(f"Cannot compare a KTDay with {type(__value)}")
         if not isinstance(__value, KTDay):
             __value = KTDay(__value)
@@ -174,17 +200,20 @@ class KTDay:
             __value = KTDay(__value)
         return hash(self) >= hash(__value)
 
-    def __sub__(self, other: KTDay | int | datetime.timedelta | relativedelta) -> int | KTDay:
+    def __sub__(self, other: KTDay | int | datetime.date | datetime.timedelta | relativedelta) -> int | KTDay:
         """Subtract a number of days or a time period from this day."""
         if isinstance(other, KTDay):
             return (self.date - other.date).days
         if isinstance(other, int):
-            delta = relativedelta(days=other)
-        elif isinstance(other, datetime.timedelta):
-            delta = relativedelta(days=other.days)
-        elif isinstance(other, relativedelta):
-            delta = relativedelta(years=other.years, months=other.months, days=other.days)
-        return KTDay(self.date - delta)
+            return self.__class__(self.date - relativedelta(days=other), ktcalendar=self.ktcalendar)
+        if isinstance(other, datetime.timedelta):
+            return self.__class__(self.date - relativedelta(days=other.days), ktcalendar=self.ktcalendar)
+        if isinstance(other, relativedelta):
+            return self.__class__(
+                self.date - relativedelta(years=other.years, months=other.months, days=other.days),
+                ktcalendar=self.ktcalendar,
+            )
+        return self - KTDay(other)
 
     def __add__(self, other: int | datetime.timedelta | relativedelta) -> KTDay:
         """Add a number of days or a time period to this day.
@@ -223,7 +252,10 @@ class KTCalendar(Calendar):
     @override
     def __init__(self, firstweekday: int = 0, country_code: str | None = None) -> None:
         super().__init__(firstweekday)
-        self.country_calendar_code = country_code or self.__class__.get_default_country_code()
+        if country_code is None:
+            self.country_calendar_code = self.__class__.get_default_country_code()
+        else:
+            self.country_calendar_code = country_code
 
     @staticmethod
     def get_default_country_code() -> str:
@@ -233,10 +265,28 @@ class KTCalendar(Calendar):
         """
         return os.environ.get("DEFAULT_HOLIDAYS_CALENDAR", "GB-ENG")
 
+    def get_ktday(self, day: KTDay | datetime.date | str | None = None, **kwargs: dict) -> KTDay:
+        """Return a calendar-aware KTDay instance."""
+        return KTDay(day=day, ktcalendar=self, **kwargs)
+
+    def itermonthktdates(self, year: int, month: int) -> Iterator[KTDay | None]:
+        """Return an iterator for one month.
+
+        The iterator will yield a KTDay
+        values and will always iterate through complete weeks, so it will yield
+        KTDates outside the specified month.
+        """
+        for x in super().itermonthdates(year, month):
+            yield KTDay(x, ktcalendar=self)
+
     def itermonthktdays(self, year: int, month: int) -> Iterator[KTDay | None]:
-        """Iterate over the days of the month."""
+        """Iterate over the days of the month returning entire weeks.
+
+        If 1st week start mid-week, say for example Wednesday, then the first 2 elements returned will be None.
+        (Monday and Tuesday are outside of the month in the example)
+        """
         for x in super().itermonthdays(year, month):
-            yield KTDay(datetime.date(year, month, x)) if x else None
+            yield KTDay(datetime.date(year, month, x), ktcalendar=self) if x else None
 
     def iter_dates(
         self, from_date: KTDay | datetime.date | str, to_date: KTDay | datetime.date | str
@@ -249,7 +299,7 @@ class KTCalendar(Calendar):
         delta_days = (end.date - start.date).days
 
         for i in range(delta_days + 1):
-            yield KTDay(start.date + datetime.timedelta(days=i))
+            yield KTDay(start.date + datetime.timedelta(days=i), ktcalendar=self)
 
     def get_work_days(
         self, from_date: KTDay | datetime.date | str, to_date: KTDay | datetime.date | str
@@ -267,7 +317,9 @@ class KTCalendar(Calendar):
         If no date is given, the current date is used.
         """
         date = KTDay(date).date
-        return KTDay(date + relativedelta(weekday=MO(-1))), KTDay(date + relativedelta(weekday=SU))
+        return KTDay(date + relativedelta(weekday=MO(-1)), ktcalendar=self), KTDay(
+            date + relativedelta(weekday=SU), ktcalendar=self
+        )
 
     def iter_week(self, date: datetime.date | str | None = None) -> Iterator[KTDay]:
         """Iterate over all dates in the week for the given date.

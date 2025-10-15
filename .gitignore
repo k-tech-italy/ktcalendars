@@ -10,5 +10,7 @@
 !tests/.coveragerc
 
 *.egg-info
+**/__pycache__
+**/*.pyc
 
 coverage.xml
