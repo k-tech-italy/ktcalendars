@@ -223,7 +223,7 @@ class KTCalendar(Calendar):
     @override
     def __init__(self, firstweekday: int = 0, country_code: str | None = None) -> None:
         super().__init__(firstweekday)
-        self.country_calendar_code = country_code or KTCalendar.get_default_country_code()
+        self.country_calendar_code = country_code or self.__class__.get_default_country_code()
 
     @staticmethod
     def get_default_country_code() -> str:
