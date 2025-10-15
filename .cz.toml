@@ -5,3 +5,7 @@ version_scheme = "pep440"
 version_provider = "pep621"
 update_changelog_on_bump = true
 major_version_zero = true
+changelog_start_rev = "0.8.0"
+version_files = [
+    "src/ktcalendars/__init__.py:__version__",
+]
