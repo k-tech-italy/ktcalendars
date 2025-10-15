@@ -8,7 +8,6 @@ from calendar import Calendar
 
 __author__ = "Giovanni Bronzini"
 __version__ = "0.8.0"
-__name__ = "ktcalendars"
 
 
 try:
@@ -64,8 +63,9 @@ class KTDay:
         If the country_code is provided, it will be used as the default country_code.
         """
         self.date: datetime.date
+        self.ktcalendar: KTCalendar | None = ktcalendar
         if ktcalendar:
-            self.country_code = ktcalendar.country_calendar_code
+            self.country_code: str | None = ktcalendar.country_calendar_code
         else:
             self.country_code = None
         if day is None:
@@ -88,8 +88,7 @@ class KTDay:
         """
         if self.country_code is None:
             return KTCalendar.get_default_country_code()
-        else:
-            return self.country_code
+        return self.country_code
 
     @property
     def day(self) -> int:
@@ -171,7 +170,8 @@ class KTDay:
             yield self + i
 
     def __eq__(self, __value: object) -> bool:
-        if not isinstance(__value, (KTDay, datetime.date, str)):
+        """Return True if this day is equal to the given day."""
+        if not isinstance(__value, KTDay | datetime.date | str):
             raise NotImplementedError(f"Cannot compare a KTDay with {type(__value)}")
         if not isinstance(__value, KTDay):
             __value = KTDay(__value)
@@ -200,17 +200,20 @@ class KTDay:
             __value = KTDay(__value)
         return hash(self) >= hash(__value)
 
-    def __sub__(self, other: KTDay | int | datetime.timedelta | relativedelta) -> int | KTDay:
+    def __sub__(self, other: KTDay | int | datetime.date | datetime.timedelta | relativedelta) -> int | KTDay:
         """Subtract a number of days or a time period from this day."""
         if isinstance(other, KTDay):
             return (self.date - other.date).days
         if isinstance(other, int):
-            delta = relativedelta(days=other)
-        elif isinstance(other, datetime.timedelta):
-            delta = relativedelta(days=other.days)
-        elif isinstance(other, relativedelta):
-            delta = relativedelta(years=other.years, months=other.months, days=other.days)
-        return KTDay(self.date - delta)
+            return self.__class__(self.date - relativedelta(days=other), ktcalendar=self.ktcalendar)
+        if isinstance(other, datetime.timedelta):
+            return self.__class__(self.date - relativedelta(days=other.days), ktcalendar=self.ktcalendar)
+        if isinstance(other, relativedelta):
+            return self.__class__(
+                self.date - relativedelta(years=other.years, months=other.months, days=other.days),
+                ktcalendar=self.ktcalendar,
+            )
+        return self - KTDay(other)
 
     def __add__(self, other: int | datetime.timedelta | relativedelta) -> KTDay:
         """Add a number of days or a time period to this day.
@@ -262,12 +265,14 @@ class KTCalendar(Calendar):
         """
         return os.environ.get("DEFAULT_HOLIDAYS_CALENDAR", "GB-ENG")
 
-    def get_ktday(self, day: KTDay | datetime.date | str | None = None, **kwargs: dict):
+    def get_ktday(self, day: KTDay | datetime.date | str | None = None, **kwargs: dict) -> KTDay:
         """Return a calendar-aware KTDay instance."""
         return KTDay(day=day, ktcalendar=self, **kwargs)
 
     def itermonthktdates(self, year: int, month: int) -> Iterator[KTDay | None]:
-        """Return an iterator for one month. The iterator will yield a KTDay
+        """Return an iterator for one month.
+
+        The iterator will yield a KTDay
         values and will always iterate through complete weeks, so it will yield
         KTDates outside the specified month.
         """

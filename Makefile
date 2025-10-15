@@ -4,5 +4,5 @@ test-cov: ## run tests with coverage
         --cov-config=tests/.coveragerc \
         --cov=ktcalendars || true
 	@if [ "${BROWSERCMD}" != "" ]; then \
-    	${BROWSERCMD} `pwd`/~build/coverage/index.html ; \
+    	"${BROWSERCMD}" `pwd`/~build/coverage/index.html ; \
     fi
