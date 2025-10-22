@@ -1,4 +1,4 @@
-# django-temporary-permissions
+# KTcalendars
 
 <!--
 [![Test](https://github.com/k-tech-italy/ktcalendars/actions/workflows/test.yml/badge.svg)](https://github.com/k-tech-italy/ktcalendars/actions/workflows/test.yml)
