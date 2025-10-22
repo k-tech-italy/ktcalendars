@@ -6,7 +6,7 @@ repo_url: https://github.com/k-tech-italy/ktcalendars
 site_author: KTech
 site_description: ""
 site_dir: ./~build/docs
-site_name: django-temporary-permissions
+site_name: ktcalendars
 site_url: https://k-tech-italy.github.io/k-tech-italy/ktcalendars/
 strict: false
 
