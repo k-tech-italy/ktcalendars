@@ -1,3 +1,5 @@
+"""Utility helpers for date parsing and country holiday calendar lookup."""
+
 from __future__ import annotations
 
 import datetime
@@ -7,7 +9,12 @@ import holidays
 
 
 def dt(dat: str) -> datetime.date | None:
-    """Parse a date string into a datetime.date or None."""
+    """Parse a date string into a datetime.date.
+
+    Accepted formats are ``YYYY-MM-DD``, ``YYYY/MM/DD`` and ``YYYYMMDD``.
+    Returns None if the string has an unexpected length; raises ValueError
+    if the argument is not a string or does not match any accepted format.
+    """
     if not isinstance(dat, str):
         raise ValueError(f"Need a string to parse. Got {type(dat)}")
     if len(dat) not in (8, 10):
@@ -20,7 +27,12 @@ def dt(dat: str) -> datetime.date | None:
 
 
 def get_country_holidays(country_calendar_code: str | None = None) -> holidays.HolidayBase:
-    """Generate the appropriate country holidays."""
+    """Return the holiday calendar for the given country calendar code.
+
+    The code is either a country code (e.g. ``"IT"``) or a country code with
+    a subdivision (e.g. ``"GB-ENG"``). When None, the ``DEFAULT_HOLIDAYS_CALENDAR``
+    environment variable is used, falling back to ``"GB-ENG"``.
+    """
     hol_calendar = country_calendar_code or os.environ.get("DEFAULT_HOLIDAYS_CALENDAR") or "GB-ENG"
     subdiv = None
     if "-" in hol_calendar:

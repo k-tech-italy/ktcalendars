@@ -22,6 +22,7 @@ classifiers = [
 ]
 dependencies = [
   "holidays",
+  "pytest-xdist>=3.8",
 ]
 
 [dependency-groups]

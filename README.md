@@ -11,7 +11,19 @@
 -->
 
 
-KTCalendar is a library providing utility classes for country-specific holiday-aware calendars and dates.
+KTCalendars is a library providing utility classes for country-specific holiday-aware calendars and dates.
+
+```python
+from ktcalendars import KTCalendar
+
+cal = KTCalendar(country_code="IT")
+day = cal.get_ktday("2025-06-02")  # Festa della Repubblica
+day.is_holiday()                   # True
+cal.get_work_days("2025-06-01", "2025-06-08")
+# [K2025-06-03, K2025-06-04, K2025-06-05, K2025-06-06]
+```
+
+See the [documentation](https://k-tech-italy.github.io/ktcalendars/) for more.
 
 
 ## Dependencies
@@ -28,7 +40,7 @@ KTCalendar is a library providing utility classes for country-specific holiday-a
 
 ## Bug reports and requests for enhancements
 
-Please open an issue on the project's [issue tracker on GitHub](https://github.com/k-tech-italy/django_temporary_permissions/issues).
+Please open an issue on the project's [issue tracker on GitHub](https://github.com/k-tech-italy/ktcalendars/issues).
 
 ## Contributing to the project
 

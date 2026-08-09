@@ -1,5 +1,5 @@
 nav:
   - Home: index.md
-  - Extras: extras
-  - contributing.md
+  - Getting started: usage.md
   - Examples: examples
+  - contributing.md
