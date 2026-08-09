@@ -5,7 +5,8 @@ import freezegun
 import pytest
 from dateutil.relativedelta import relativedelta
 
-from ktcalendars import KTCalendar, KTDay, dt
+from ktcalendars import KTCalendar, KTDay
+from ktcalendars.utils import dt
 
 
 class TestKTDay:

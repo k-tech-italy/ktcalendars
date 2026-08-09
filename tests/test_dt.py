@@ -4,7 +4,7 @@ from contextlib import nullcontext as does_not_raise
 
 import pytest
 
-from ktcalendars import dt
+from ktcalendars.utils import dt
 
 
 @pytest.mark.parametrize(
