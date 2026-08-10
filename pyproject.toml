@@ -73,7 +73,6 @@ build.targets.sdist.exclude = [
 ]
 build.targets.wheel.packages = [ "src/ktcalendars" ]
 version.source = "vcs"
-raw-options = { root = "../.." }
 
 [tool.pytest.ini_options]
 addopts = [
