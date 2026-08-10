@@ -101,7 +101,8 @@ exclude = [
     "dist",
     "node_modules",
     "site-packages",
-    "venv"
+    "venv",
+    "version.py"
 ]
 
 [format]

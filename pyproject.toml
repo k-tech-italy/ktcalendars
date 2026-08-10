@@ -7,7 +7,6 @@ requires = [
 
 [project]
 name = "ktcalendars"
-version = "0.9.1"
 description = ""
 readme = "README.md"
 license = "Apache-2.0"
@@ -20,6 +19,7 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
 ]
+dynamic = [ "version" ]
 dependencies = [
   "holidays",
   "pytest-xdist>=3.8",
@@ -39,7 +39,6 @@ dev = [
 ]
 
 checks = [
-  "commitizen>=4.9.1",
   "detect-secrets>=1.5",
   "mypy>=1.17.1",
   "ruff>=0.12.12",
@@ -63,10 +62,18 @@ documentation = [
   "pymdown-extensions>=10.7.1",
 ]
 
-[tool.hatch.build.targets.sdist]
-include = [
-  "src/ktcalendars/*.py",
+[tool.hatch]
+build.hooks.vcs.version-file = "src/ktcalendars/version.py"
+build.targets.sdist.ignore-vcs = true
+build.targets.sdist.include = [
+  "src/ktcalendars/**/*.*",
 ]
+build.targets.sdist.exclude = [
+  "src/ktcalendars/**/~*.*",
+]
+build.targets.wheel.packages = [ "src/ktcalendars" ]
+version.source = "vcs"
+raw-options = { root = "../.." }
 
 [tool.pytest.ini_options]
 addopts = [
