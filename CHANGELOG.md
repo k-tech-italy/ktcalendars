@@ -31,7 +31,7 @@ Notable changes to ktcalendars, newest first.
 * Lint runs through pre-commit in tox, with strict mypy checked against typed
   dependencies; tests run on Python 3.10–3.14 and enforce 100% diff coverage.
 
-  
+
 ## 0.9.1 (2025-10-22)
 
 * Added calendar-aware `KTDay` generators to `KTCalendar` (`get_ktday`,

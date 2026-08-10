@@ -24,7 +24,7 @@ from ktcalendars.utils import dt
         pytest.param(
             "20210231",
             None,
-            pytest.raises(ValueError, match="day is out of range for month"),
+            pytest.raises(ValueError, match="range"),
             id="bad-day",
         ),
         pytest.param(

@@ -451,6 +451,21 @@ wheels = [
 ]
 
 [[package]]
+name = "diff-cover"
+version = "10.5.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "chardet" },
+    { name = "jinja2" },
+    { name = "pluggy" },
+    { name = "pygments" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/35/c7/b2883d341261dfa1cdc4386929e967ff4af9c201405f6f72275abefd5f2a/diff_cover-10.5.0.tar.gz", hash = "sha256:a1734543baaaa7d0860a6526016d487be24a0ffe9efb4eca0824c391d4a09d06", size = 110762, upload-time = "2026-08-08T17:25:19.494Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/63/c8/5345dfb7c955639454fffc767c3eaf9863d79a1cdb0081392a71102fedfa/diff_cover-10.5.0-py3-none-any.whl", hash = "sha256:5619f924e838b8f8c4c7b243b32a6068d8c449c1766c6f6a1110b152195ed9b9", size = 61184, upload-time = "2026-08-08T17:25:18.337Z" },
+]
+
+[[package]]
 name = "distlib"
 version = "0.4.0"
 source = { registry = "https://pypi.org/simple" }
@@ -619,6 +634,7 @@ source = { editable = "." }
 dependencies = [
     { name = "holidays" },
     { name = "pytest-xdist" },
+    { name = "typing-extensions" },
 ]
 
 [package.dev-dependencies]
@@ -629,6 +645,7 @@ checks = [
     { name = "ruff" },
 ]
 dev = [
+    { name = "diff-cover" },
     { name = "freezegun" },
     { name = "pre-commit" },
     { name = "pytest" },
@@ -659,7 +676,8 @@ documentation = [
 [package.metadata]
 requires-dist = [
     { name = "holidays" },
-    { name = "pytest-xdist", specifier = ">=3.8.0" },
+    { name = "pytest-xdist", specifier = ">=3.8" },
+    { name = "typing-extensions", specifier = ">=4.15" },
 ]
 
 [package.metadata.requires-dev]
@@ -670,6 +688,7 @@ checks = [
     { name = "ruff", specifier = ">=0.12.12" },
 ]
 dev = [
+    { name = "diff-cover", specifier = ">=10.5.0" },
     { name = "freezegun", specifier = ">=1.5.2" },
     { name = "pre-commit", specifier = ">=4.2" },
     { name = "pytest", specifier = ">=8.3.3" },

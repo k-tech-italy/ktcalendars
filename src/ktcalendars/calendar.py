@@ -5,7 +5,8 @@ from __future__ import annotations
 import datetime
 import os
 from calendar import Calendar
-from typing import override, TYPE_CHECKING
+from typing_extensions import override
+from typing import TYPE_CHECKING
 
 from dateutil.relativedelta import relativedelta, MO, SU
 from .days import KTDay

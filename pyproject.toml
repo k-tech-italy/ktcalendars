@@ -23,10 +23,12 @@ classifiers = [
 dependencies = [
   "holidays",
   "pytest-xdist>=3.8",
+  "typing-extensions>=4.15",
 ]
 
 [dependency-groups]
 dev = [
+  "diff-cover>=10.5",
   "freezegun>=1.5.2",
   "pre-commit>=4.2",
   "pytest>=8.3.3",
