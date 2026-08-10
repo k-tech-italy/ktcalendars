@@ -23,7 +23,8 @@ cal.get_work_days("2025-06-01", "2025-06-08")
 # [K2025-06-03, K2025-06-04, K2025-06-05, K2025-06-06]
 ```
 
-See the [documentation](https://k-tech-italy.github.io/ktcalendars/) for more.
+See the [documentation](https://k-tech-italy.github.io/ktcalendars/) for more,
+and the [changelog](CHANGELOG.md) for notable changes between releases.
 
 
 ## Dependencies
