@@ -1,17 +1,23 @@
+"""KTDay module."""
+
 from __future__ import annotations
 
 import datetime
 import typing
-from typing import Iterator
 
 from dateutil.relativedelta import relativedelta
 
-
 from ktcalendars.providers import extra_holiday_provider
-from ktcalendars.utils import get_country_holidays, dt
+from ktcalendars.utils import dt, get_country_holidays
+
 
 if typing.TYPE_CHECKING:
+    from collections.abc import Iterator
     from ktcalendars.calendar import KTCalendar
+
+
+__all__ = ["KTDay"]
+
 
 class KTDay:
     """Utility class for a day."""
@@ -19,11 +25,14 @@ class KTDay:
     non_working_days = ["Sat", "Sun"]
 
     def __init__(
-        self, day: KTDay | datetime.date | str | None = None, ktcalendar: KTCalendar | None = None, **kwargs: dict
+        self, day: KTDay | datetime.date | str | None = None, ktcalendar: KTCalendar | None = None, **kwargs: object
     ) -> None:
         """Initialize a KTDay.
 
-        If the country_code is provided, it will be used as the default country_code.
+        `day` can be another KTDay, a datetime.date, a date string parseable
+        by `ktcalendars.utils.dt` or None (today). If a `ktcalendar` is
+        provided, its country calendar code is used for holiday checks;
+        any extra keyword arguments are set as instance attributes.
         """
         self.date: datetime.date
         self.ktcalendar: KTCalendar | None = ktcalendar
@@ -49,7 +58,7 @@ class KTDay:
 
         Falls back to the default country code of the KTCalendar class.
         """
-        from ktcalendars import KTCalendar
+        from ktcalendars.calendar import KTCalendar  # noqa: PLC0415
 
         if self.country_code is None:
             return KTCalendar.get_default_country_code()
@@ -125,7 +134,7 @@ class KTDay:
         return self.date.strftime("%b")
 
     def range_to(self, target: datetime.date | KTDay) -> Iterator[KTDay]:
-        """Iterate over all days between this day and the target day."""
+        """Iterate over all days between this day and the target day (both inclusive)."""
         if not isinstance(target, KTDay):
             target = KTDay(target)
         if self.date > target.date:
@@ -145,22 +154,22 @@ class KTDay:
     def __hash__(self) -> int:
         return self.date.year * 10000 + self.date.month * 100 + self.date.day
 
-    def __lt__(self, __value: KTDay | datetime.date | str) -> bool:
+    def __lt__(self, __value: KTDay | datetime.date | str | None) -> bool:
         if not isinstance(__value, KTDay):
             __value = KTDay(__value)
         return hash(self) < hash(__value)
 
-    def __gt__(self, __value: KTDay | datetime.date | str) -> bool:
+    def __gt__(self, __value: KTDay | datetime.date | str | None) -> bool:
         if not isinstance(__value, KTDay):
             __value = KTDay(__value)
         return hash(self) > hash(__value)
 
-    def __le__(self, __value: KTDay | datetime.date | str) -> bool:
+    def __le__(self, __value: KTDay | datetime.date | str | None) -> bool:
         if not isinstance(__value, KTDay):
             __value = KTDay(__value)
         return hash(self) <= hash(__value)
 
-    def __ge__(self, __value: KTDay | datetime.date | str) -> bool:
+    def __ge__(self, __value: KTDay | datetime.date | str | None) -> bool:
         if not isinstance(__value, KTDay):
             __value = KTDay(__value)
         return hash(self) >= hash(__value)
@@ -194,7 +203,7 @@ class KTDay:
         ignored.
 
         :param other: the number of days or period of time to add.
-        :return: a new `KrmDay` instance.
+        :return: a new `KTDay` instance.
         """
         if isinstance(other, int):
             delta = relativedelta(days=other)
@@ -202,6 +211,8 @@ class KTDay:
             delta = relativedelta(days=other.days)
         elif isinstance(other, relativedelta):
             delta = relativedelta(years=other.years, months=other.months, days=other.days)
+        else:
+            raise TypeError(f"Cannot add {type(other)} to a KTDay")
         return KTDay(self.date + delta)
 
     def __repr__(self) -> str:

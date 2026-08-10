@@ -7,7 +7,7 @@ site_author: KTech
 site_description: ""
 site_dir: ./~build/docs
 site_name: ktcalendars
-site_url: https://k-tech-italy.github.io/k-tech-italy/ktcalendars/
+site_url: https://k-tech-italy.github.io/ktcalendars/
 strict: false
 
 theme:

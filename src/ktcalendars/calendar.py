@@ -1,17 +1,25 @@
+"""KTCalendar modulee."""
+
 from __future__ import annotations
 
 import datetime
 import os
 from calendar import Calendar
-from typing import override
-from collections.abc import Iterator
+from typing import override, TYPE_CHECKING
 
 from dateutil.relativedelta import relativedelta, MO, SU
 from .days import KTDay
 
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+    from collections.abc import Iterator
+
+
+__all__ = ["KTCalendar"]
+
 
 class KTCalendar(Calendar):
-    """A custom calendar class for KRM that generates KrmDays."""
+    """A holiday-aware calendar that generates KTDay instances for a country calendar."""
 
     @override
     def __init__(self, firstweekday: int = 0, country_code: str | None = None) -> None:
@@ -25,27 +33,25 @@ class KTCalendar(Calendar):
     def get_default_country_code() -> str:
         """Return the default country code.
 
-        Override this method to customise.
+        Defaults to the ``DEFAULT_HOLIDAYS_CALENDAR`` environment variable,
+        falling back to ``"GB-ENG"``. Override this method to customise.
         """
         return os.environ.get("DEFAULT_HOLIDAYS_CALENDAR", "GB-ENG")
 
-    def get_ktday(self, day: KTDay | datetime.date | str | None = None, **kwargs: dict) -> KTDay:
+    def get_ktday(self, day: KTDay | datetime.date | str | None = None, **kwargs: object) -> KTDay:
         """Return a calendar-aware KTDay instance."""
-        from . import KTDay
-
         return KTDay(day=day, ktcalendar=self, **kwargs)
 
-    def itermonthktdates(self, year: int, month: int) -> Iterator[KTDay | None]:
+    def month_weeks_days(self, year: int, month: int) -> Iterator[KTDay]:
         """Return an iterator for one month.
 
-        The iterator will yield a KTDay
-        values and will always iterate through complete weeks, so it will yield
-        KTDates outside the specified month.
+        The iterator yields KTDay instances and always iterates through
+        complete weeks, so it will yield KTDays outside the specified month.
         """
         for x in super().itermonthdates(year, month):
             yield KTDay(x, ktcalendar=self)
 
-    def itermonthktdays(self, year: int, month: int) -> Iterator[KTDay | None]:
+    def days_in_months(self, year: int, month: int) -> Iterator[KTDay | None]:
         """Iterate over the days of the month returning entire weeks.
 
         If 1st week start mid-week, say for example Wednesday, then the first 2 elements returned will be None.
@@ -69,13 +75,19 @@ class KTCalendar(Calendar):
 
     def get_work_days(
         self, from_date: KTDay | datetime.date | str, to_date: KTDay | datetime.date | str
-    ) -> list[KTDay]:
-        """Return the iterator for the work days between from_date and to_date."""
-        days_between = self.iter_dates(from_date, to_date)
+    ) -> Iterable[KTDay]:
+        """Iterate over all working days between from_date and to_date."""
+        for day in self.iter_dates(from_date, to_date):
+            if not day.is_non_working_day(country_calendar_code=self.country_calendar_code):
+                yield day
 
-        return [
-            day for day in days_between if not day.is_non_working_day(country_calendar_code=self.country_calendar_code)
-        ]
+    def get_non_work_days(
+        self, from_date: KTDay | datetime.date | str, to_date: KTDay | datetime.date | str
+    ) -> Iterable[KTDay]:
+        """Iterate over all non-working days between from_date and to_date."""
+        for day in self.iter_dates(from_date, to_date):
+            if day.is_non_working_day(country_calendar_code=self.country_calendar_code):
+                yield day
 
     def week_for(self, date: KTDay | datetime.date | str | None = None) -> tuple[KTDay, KTDay]:
         """Return the start and end date of the week for the given date.

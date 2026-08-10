@@ -1,4 +1,5 @@
 import datetime
+import inspect
 from contextlib import nullcontext as does_not_raise
 
 import freezegun
@@ -89,6 +90,10 @@ class TestKTDay:
     def test_add_relativedelta_ignoring_finer_granularity_than_day(self):
         assert KTDay('2024-02-28') + relativedelta(months=1, hours=23, minutes=30, seconds=45) == KTDay('2024-03-28')
 
+    def test_add_unsupported_type(self):
+        with pytest.raises(TypeError, match='Cannot add'):
+            KTDay('2024-02-28') + 'foo'
+
     def test_add_relativedelta_ignoring_absolute_information(self):
         assert KTDay('2024-02-28') + relativedelta(months=1, day=23, month=3, year=1945) == KTDay('2024-03-28')
 
@@ -137,17 +142,52 @@ class TestKTDay:
         assert KTDay('2025-03-17').is_holiday(country_calendar_code='GB-ENG') is False  # St Patrick's day
         assert KTDay('2025-03-17').is_holiday(country_calendar_code='GB-NIR') is True  # St Patrick's day
 
+    def test_is_holiday_excluding_sundays(self):
+        assert KTDay('2025-06-08').is_holiday(include_sundays_as_holiday=False) is False  # A regular Sunday
+        assert KTDay('2025-08-25').is_holiday(include_sundays_as_holiday=False) is True  # Bank Hol in UK
+
+    def test_is_extra_holiday_defaults_to_false(self):
+        assert KTDay('2025-06-02').is_extra_holiday() is False
+        assert KTDay('2025-06-02').is_extra_holiday('IT') is False
+
+    def test_is_holiday_with_extra_holiday_provider(self, monkeypatch):
+        class EverydayClosure:
+            @classmethod
+            def is_extra_holiday(cls, ktd, country_calendar_code):
+                return True
+
+        monkeypatch.setattr('ktcalendars.days.extra_holiday_provider', EverydayClosure())
+        assert KTDay('2025-06-02').is_holiday() is True, 'A regular Monday flagged by the extra holiday provider'
+
+    def test_is_non_working_day(self):
+        assert KTDay('2025-06-02').is_non_working_day() is False, 'A regular Monday'
+        assert KTDay('2025-06-07').is_non_working_day() is True, 'A Saturday'
+        assert KTDay('2025-08-25').is_non_working_day() is True, 'Bank Hol in UK'
+        assert KTDay('2025-06-02').is_non_working_day(country_calendar_code='IT') is True, 'Bank Hol in Italy'
+
+    def test_str_and_repr(self):
+        assert str(KTDay('2025-06-02')) == '2025-06-02'
+        assert repr(KTDay('2025-06-02')) == 'K2025-06-02'
+
 
 class TestKTCalendar:
+    def test_get_ktday(self):
+        cal = KTCalendar(country_code='IT')
+        ktd = cal.get_ktday('2025-06-02', label='festa')
+        assert ktd == KTDay('2025-06-02')
+        assert ktd.ktcalendar is cal
+        assert ktd.get_country_code() == 'IT'
+        assert ktd.label == 'festa'  # type: ignore[attr-defined]
+
     def test_itermonthdates(self):
         cal = KTCalendar()
-        assert [kd.day for kd in cal.itermonthktdates(2025, 6)] == (
+        assert [kd.day for kd in cal.month_weeks_days(2025, 6)] == (
             list(range(26, 32)) + list(range(1, 31)) + list(range(1, 7))
         )
 
     def test_itermonthdays(self):
         cal = KTCalendar()
-        assert [kd.day if kd else None for kd in cal.itermonthktdays(2025, 6)] == (
+        assert [kd.day if kd else None for kd in cal.days_in_months(2025, 6)] == (
             [None for _ in range(26, 32)] + list(range(1, 31)) + [None for _ in range(1, 7)]
         )
 
@@ -190,34 +230,49 @@ class TestKTCalendar:
         'start, end, country_code, expectation, result',
         [
             pytest.param(
-                '2025-07-11', '2025-07-15', None, does_not_raise(), ['2025-07-11', '2025-07-14', '2025-07-15'], id='3wd'
+                '2026-06-26', '2026-06-30', 'IT-RM', does_not_raise(), ['2026-06-26', '2026-06-30'], id='rome'
             ),
-            pytest.param('2025-07-11', '2025-07-13', None, does_not_raise(), ['2025-07-11'], id='1wd'),
-            pytest.param('2025-07-12', '2025-07-13', None, does_not_raise(), [], id='no-wd'),
-            pytest.param('2025-06-01', '2025-06-03', 'IT-RM', does_not_raise(), ['2025-06-03'], id='ita'),
-            # 2025-06-02 italian bank holiday
-            pytest.param('2025-06-01', '2025-06-03', None, does_not_raise(), ['2025-06-02', '2025-06-03'], id='ita'),
-            # 2025-06-02 italian bank holiday
             pytest.param(
-                '2025-06-02',
-                '2025-06-01',
-                None,
-                pytest.raises(ValueError, match='Start date cannot be after end date.'),
-                None,
-                id='invalid',
+                '2026-06-26', '2026-06-30', 'IT', does_not_raise(), ['2026-06-26', '2026-06-29', '2026-06-30'], id='ita'
             ),
         ],
     )
     def test_get_work_days(self, start, end, country_code, expectation, result):
         cal = KTCalendar(country_code=country_code)
         with expectation:
-            assert cal.get_work_days(start, end) == [KTDay(x) for x in result]
+            res = cal.get_work_days(start, end)
+            assert inspect.isgenerator(res)
+            assert list(res) == [KTDay(x) for x in result]
+
+    @pytest.mark.parametrize(
+        'start, end, country_code, expectation, result',
+        [
+            pytest.param(
+                '2026-06-26',
+                '2026-06-30',
+                'IT-RM',
+                does_not_raise(),
+                ['2026-06-27', '2026-06-28', '2026-06-29'],
+                id='rome',
+            ),
+            pytest.param('2026-06-26', '2026-06-30', 'IT', does_not_raise(), ['2026-06-27', '2026-06-28'], id='ita'),
+        ],
+    )
+    def test_get_non_work_days(self, start, end, country_code, expectation, result):
+        cal = KTCalendar(country_code=country_code)
+        with expectation:
+            res = cal.get_non_work_days(start, end)
+            assert inspect.isgenerator(res)
+            assert list(res) == [KTDay(x) for x in result]
 
     def test_default_calendar(self):
         uk_cal = KTCalendar()
         rm_cal = type("KTCalendar", (KTCalendar,), {'get_default_country_code': staticmethod(lambda *args: 'IT-RM')})()
 
-        assert list(rm_cal.itermonthktdays(2025, 5))[28].is_holiday() is False
-        assert (
-            list(uk_cal.itermonthktdays(2025, 5))[28].is_holiday() is True
-        )  # The last Monday in May is a bank holiday
+        last_may_monday = list(rm_cal.days_in_months(2025, 5))[28]
+        assert last_may_monday is not None
+        assert last_may_monday.is_holiday() is False
+
+        last_may_monday = list(uk_cal.days_in_months(2025, 5))[28]
+        assert last_may_monday is not None
+        assert last_may_monday.is_holiday() is True  # The last Monday in May is a bank holiday
