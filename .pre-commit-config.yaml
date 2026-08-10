@@ -43,13 +43,6 @@ repos:
       - id: python-bandit-vulnerability-check
         args: [ --skip, "B101", --recursive, clumper ]
 
-  - repo: https://github.com/commitizen-tools/commitizen
-    rev: v4.9.0
-    hooks:
-      - id: commitizen
-        stages: [ commit-msg ]
-        additional_dependencies:
-          - deprecated
   - repo: https://github.com/astral-sh/uv-pre-commit
     # uv version.
     rev: 0.8.17
