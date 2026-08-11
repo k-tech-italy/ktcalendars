@@ -2,10 +2,9 @@
 name = "cz_conventional_commits"
 tag_format = "$version"
 version_scheme = "pep440"
-version_provider = "pep621"
+# The version only lives in git tags (hatch-vcs derives the package version
+# from them at build time), so read the current version from the SCM and
+# don't rewrite any version file on bump.
+version_provider = "scm"
 update_changelog_on_bump = true
-major_version_zero = true
 changelog_start_rev = "0.8.0"
-version_files = [
-    "src/ktcalendars/__init__.py:__version__",
-]
