@@ -6,7 +6,7 @@ import freezegun
 import pytest
 from dateutil.relativedelta import relativedelta
 
-from ktcalendars import KTCalendar, KTDay
+from ktcalendars import DefaultConfiguration, KTCalendar, KTDay
 from ktcalendars.utils import dt
 
 
@@ -150,14 +150,13 @@ class TestKTDay:
         assert KTDay('2025-06-02').is_extra_holiday() is False
         assert KTDay('2025-06-02').is_extra_holiday('IT') is False
 
-    def test_is_holiday_with_extra_holiday_provider(self, monkeypatch):
-        class EverydayClosure:
-            @classmethod
-            def is_extra_holiday(cls, ktd, country_calendar_code):
-                return True
+    def test_is_holiday_with_configuration_overrides(self, monkeypatch):
+        class EverydayClosure(DefaultConfiguration):
+            def get_holiday_overrides(self, country_calendar_code, from_date=None, to_date=None):
+                return {from_date: 'Closure'}
 
-        monkeypatch.setattr('ktcalendars.days.extra_holiday_provider', EverydayClosure())
-        assert KTDay('2025-06-02').is_holiday() is True, 'A regular Monday flagged by the extra holiday provider'
+        monkeypatch.setattr('ktcalendars.days.get_configuration', EverydayClosure)
+        assert KTDay('2025-06-02').is_holiday() is True, 'A regular Monday flagged by the holiday overrides'
 
     def test_is_non_working_day(self):
         assert KTDay('2025-06-02').is_non_working_day() is False, 'A regular Monday'

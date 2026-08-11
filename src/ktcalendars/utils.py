@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import datetime
-import os
 
 import holidays
+
+from ktcalendars.config import get_configuration
 
 
 def dt(dat: str) -> datetime.date | None:
@@ -30,10 +31,10 @@ def get_country_holidays(country_calendar_code: str | None = None) -> holidays.H
     """Return the holiday calendar for the given country calendar code.
 
     The code is either a country code (e.g. ``"IT"``) or a country code with
-    a subdivision (e.g. ``"GB-ENG"``). When None, the ``DEFAULT_HOLIDAYS_CALENDAR``
-    environment variable is used, falling back to ``"GB-ENG"``.
+    a subdivision (e.g. ``"GB-ENG"``). When None, the default country code
+    of the loaded configuration class (see `ktcalendars.config`) is used.
     """
-    hol_calendar = country_calendar_code or os.environ.get("DEFAULT_HOLIDAYS_CALENDAR") or "GB-ENG"
+    hol_calendar = country_calendar_code or get_configuration().get_default_country_code()
     subdiv = None
     if "-" in hol_calendar:
         country, subdiv = hol_calendar.split("-")

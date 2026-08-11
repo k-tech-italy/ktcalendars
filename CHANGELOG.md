@@ -2,6 +2,29 @@
 
 Notable changes to ktcalendars, newest first.
 
+## Unreleased
+
+### Breaking changes !!
+
+* The `AbstractExtraHolidayProvider` / `EXTRA_HOLIDAY_PROVIDER` mechanism was
+  removed (`ktcalendars.providers` no longer exists and the
+  `EXTRA_HOLIDAY_PROVIDER` environment variable is no longer read). Extra
+  holidays are now provided by the configuration class: migrate your provider
+  subclass to an `AbstractConfiguration` subclass exposing the same dates via
+  `get_holiday_overrides`, and set `KTCALENDAR_CONFIG` instead.
+
+### Feat
+
+* New pluggable configuration class (Req 001): set the `KTCALENDAR_CONFIG`
+  environment variable to the fully qualified name of an
+  `AbstractConfiguration` subclass to centralise holiday overrides and the
+  default country calendar code. The configuration is loaded lazily and
+  cached; `ktcalendars.config.reset_configuration()` reloads it.
+* The default country calendar code is now resolved from the new
+  `KTCALENDAR_COUNTRY` environment variable, falling back to the deprecated
+  `DEFAULT_HOLIDAYS_CALENDAR` one (which now emits a `DeprecationWarning`)
+  and finally to `GB-ENG`.
+
 ## 1.0.0 (2026-08-10)
 
 ### Breaking changes !!

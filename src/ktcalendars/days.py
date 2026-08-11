@@ -7,7 +7,7 @@ import typing
 
 from dateutil.relativedelta import relativedelta
 
-from ktcalendars.providers import extra_holiday_provider
+from ktcalendars.config import get_configuration
 from ktcalendars.utils import dt, get_country_holidays
 
 
@@ -90,10 +90,10 @@ class KTDay:
         return self.date.isocalendar()[1]
 
     def is_extra_holiday(self, country_calendar_code: str | None = None) -> bool:
-        """Return True if this day is an extra holiday."""
+        """Return True if this day is in the configuration's holiday overrides."""
         if country_calendar_code is None:
             country_calendar_code = self.get_country_code()
-        return extra_holiday_provider.is_extra_holiday(self, country_calendar_code)
+        return self.date in get_configuration().get_holiday_overrides(country_calendar_code, self.date, self.date)
 
     def is_holiday(self, country_calendar_code: str | None = None, include_sundays_as_holiday: bool = True) -> bool:
         """Return True if this day is a holiday."""
