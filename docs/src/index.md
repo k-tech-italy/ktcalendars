@@ -8,7 +8,7 @@ It builds on the [holidays](https://pypi.org/project/holidays/) package and prov
 
 * **`KTDay`** — a rich day object with date parsing, arithmetic, comparisons and holiday checks.
 * **`KTCalendar`** — a `calendar.Calendar` subclass bound to a country calendar, with work-day and week iteration helpers.
-* **`AbstractExtraHolidayProvider`** — an extension point to flag additional non-working days (e.g. company closures) via the `EXTRA_HOLIDAY_PROVIDER` environment variable.
+* **`AbstractConfiguration`** — a pluggable configuration class, selected via the `KTCALENDAR_CONFIG` environment variable, centralising holiday overrides (e.g. company closures) and the default country calendar code.
 
 Head over to [Getting started](usage.md) for configuration and usage, or browse the [examples](examples/ktday.md).
 

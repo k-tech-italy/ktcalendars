@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import datetime
-import os
 from calendar import Calendar
 from typing_extensions import override
 from typing import TYPE_CHECKING
 
 from dateutil.relativedelta import relativedelta, MO, SU
+from .config import get_configuration
 from .days import KTDay
 
 if TYPE_CHECKING:
@@ -34,10 +34,10 @@ class KTCalendar(Calendar):
     def get_default_country_code() -> str:
         """Return the default country code.
 
-        Defaults to the ``DEFAULT_HOLIDAYS_CALENDAR`` environment variable,
-        falling back to ``"GB-ENG"``. Override this method to customise.
+        Delegates to the loaded configuration class (see `ktcalendars.config`).
+        Override this method to customise.
         """
-        return os.environ.get("DEFAULT_HOLIDAYS_CALENDAR", "GB-ENG")
+        return get_configuration().get_default_country_code()
 
     def get_ktday(self, day: KTDay | datetime.date | str | None = None, **kwargs: object) -> KTDay:
         """Return a calendar-aware KTDay instance."""
