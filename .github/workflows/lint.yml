@@ -26,4 +26,7 @@ jobs:
       - uses: astral-sh/ruff-action@v3
         with:
           args: "format --check --diff"
-          version-file: "pyproject.toml"
+          # Keep in sync with the ruff version in uv.lock: version-file only
+          # holds the ">=" constraint, which makes CI install the latest
+          # release and drift from local runs.
+          version: "0.12.12"
