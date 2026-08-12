@@ -20,7 +20,6 @@ if typing.TYPE_CHECKING:
 __all__ = ["KTDay"]
 
 
-
 class KTDay:
     """Utility class for a day."""
 
@@ -36,15 +35,16 @@ class KTDay:
         provided, its country calendar code is used for holiday checks;
         any extra keyword arguments are set as instance attributes.
         """
-        from ktcalendars.calendar import KTCalendar
+        from ktcalendars.calendar import KTCalendar  # noqa: PLC0415
 
-        cal_kwargs = {k[4:]: v for k, v in kwargs.items() if k.startswith("cal_")}
+        cal_kwargs: dict[str, typing.Any] = {k[4:]: v for k, v in kwargs.items() if k.startswith("cal_")}
         for k in cal_kwargs:
             del kwargs[f'cal_{k}']
 
         self.ktcalendar: KTCalendar = ktcalendar or KTCalendar(**cal_kwargs)
         if day is None:
             day = datetime.date.today()
+        self.date: datetime.date
         if isinstance(day, KTDay):
             self.date = day.date
         elif isinstance(day, datetime.date):
@@ -84,7 +84,9 @@ class KTDay:
     @property
     def is_extra_holiday(self) -> bool:
         """Return True if this day is in the configuration's holiday overrides."""
-        return self.date in get_configuration().get_holiday_overrides(self.ktcalendar.country_calendar_code, self.date, self.date)
+        return self.date in get_configuration().get_holiday_overrides(
+            self.ktcalendar.country_calendar_code, self.date, self.date
+        )
 
     @property
     def is_holiday(self) -> bool:

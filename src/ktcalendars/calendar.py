@@ -4,29 +4,44 @@ from __future__ import annotations
 
 import datetime
 from calendar import Calendar
+from typing import TYPE_CHECKING, TypedDict, Unpack
 
 import holidays
+from dateutil.relativedelta import MO, SU, relativedelta
 from typing_extensions import override
-from typing import TYPE_CHECKING
 
-from dateutil.relativedelta import relativedelta, MO, SU
 from .config import get_configuration
 from .days import KTDay
 
+
 if TYPE_CHECKING:
-    from collections.abc import Iterable
-    from collections.abc import Iterator
+    from collections.abc import Iterable, Iterator
 
 
-__all__ = ["KTCalendar", "WEEKEND_MAP"]
+__all__ = ["KTCalendar"]
 
+
+class CountryHolidaysKwargs(TypedDict, total=False):
+    """Options forwarded verbatim to holidays.country_holidays."""
+
+    years: int | Iterable[int] | None
+    expand: bool
+    observed: bool
+    language: str | None
+    categories: str | Iterable[str] | None
 
 
 class KTCalendar(Calendar):
     """A holiday-aware calendar that generates KTDay instances for a country calendar."""
 
     @override
-    def __init__(self, firstweekday: int = 0, country_code: str | None = None, weekends: tuple | None = None, **kwargs) -> None:
+    def __init__(
+        self,
+        firstweekday: int = 0,
+        country_code: str | None = None,
+        weekends: tuple | None = None,
+        **kwargs: Unpack[CountryHolidaysKwargs],
+    ) -> None:
         super().__init__(firstweekday)
         if country_code is None:
             self.country_calendar_code = self.__class__.get_default_country_code()
