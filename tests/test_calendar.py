@@ -131,24 +131,24 @@ class TestKTDay:
         assert KTDay('2025-06-02') == KTDay(KTDay('2025-06-02'))
 
     def test_is_holiday(self):
-        assert KTDay('2025-06-02').is_holiday('IT') is True, 'Should be Bank Hol in Italy'
-        assert KTDay('2023-06-29').is_holiday('IT') is False, 'Should not be Bank Hol in Italy'
-        assert KTDay('2023-06-29').is_holiday('IT-RM') is True, 'Should be Bank Hol in Rome'
-        assert KTDay('2025-08-25').is_holiday() is True, 'Should be Bank Hol in UK'
-        assert KTDay('2025-06-07').is_holiday() is False, 'Sat should not be bank Hol'
-        assert KTDay('2025-06-08').is_holiday() is True, 'Sun should not be bank Hol'
+        assert KTDay('2025-06-02', cal_country_code='IT').is_holiday is True, 'Should be Bank Hol in Italy'
+        assert KTDay('2023-06-29', cal_country_code='IT').is_holiday is False, 'Should not be Bank Hol in Italy'
+        assert KTDay('2023-06-29', cal_country_code='IT-RM').is_holiday is True, 'Should be Bank Hol in Rome'
+        assert KTDay('2025-08-25').is_holiday is True, 'Should be Bank Hol in UK'
+        assert KTDay('2025-06-07').is_holiday is False, 'Sat should not be bank Hol'
+        assert KTDay('2025-06-08').is_holiday is False, 'Sun should not be bank Hol'
 
-        assert KTDay('2025-08-25').is_holiday(country_calendar_code='GB-ENG') is True  # Bank Hol in UK
-        assert KTDay('2025-03-17').is_holiday(country_calendar_code='GB-ENG') is False  # St Patrick's day
-        assert KTDay('2025-03-17').is_holiday(country_calendar_code='GB-NIR') is True  # St Patrick's day
+        assert KTDay('2025-08-25', cal_country_code='GB-ENG').is_holiday is True  # Bank Hol in UK
+        assert KTDay('2025-03-17', cal_country_code='GB-ENG').is_holiday is False  # St Patrick's day
+        assert KTDay('2025-03-17', cal_country_code='GB-NIR').is_holiday is True  # St Patrick's day
 
-    def test_is_holiday_excluding_sundays(self):
-        assert KTDay('2025-06-08').is_holiday(include_sundays_as_holiday=False) is False  # A regular Sunday
-        assert KTDay('2025-08-25').is_holiday(include_sundays_as_holiday=False) is True  # Bank Hol in UK
+    def test_sundays_are_not_holiday(self):
+        assert KTDay('2025-06-08').is_holiday is False  # A regular Sunday
+        assert KTDay('2025-08-25').is_holiday is True  # Bank Hol in UK
 
     def test_is_extra_holiday_defaults_to_false(self):
-        assert KTDay('2025-06-02').is_extra_holiday() is False
-        assert KTDay('2025-06-02').is_extra_holiday('IT') is False
+        assert KTDay('2025-06-02').is_extra_holiday is False
+        assert KTDay('2025-06-02', cal_country_code='IT').is_extra_holiday is False
 
     def test_is_holiday_with_configuration_overrides(self, monkeypatch):
         class EverydayClosure(DefaultConfiguration):
@@ -156,13 +156,14 @@ class TestKTDay:
                 return {from_date: 'Closure'}
 
         monkeypatch.setattr('ktcalendars.days.get_configuration', EverydayClosure)
-        assert KTDay('2025-06-02').is_holiday() is True, 'A regular Monday flagged by the holiday overrides'
+        assert KTDay('2025-06-02').is_holiday is False, 'A regular Monday'
+        assert KTDay('2025-06-02').is_extra_holiday is True, 'A regular Monday flagged by the holiday overrides'
 
     def test_is_non_working_day(self):
-        assert KTDay('2025-06-02').is_non_working_day() is False, 'A regular Monday'
-        assert KTDay('2025-06-07').is_non_working_day() is True, 'A Saturday'
-        assert KTDay('2025-08-25').is_non_working_day() is True, 'Bank Hol in UK'
-        assert KTDay('2025-06-02').is_non_working_day(country_calendar_code='IT') is True, 'Bank Hol in Italy'
+        assert KTDay('2025-06-09').is_workday is True, 'A regular Monday'
+        assert KTDay('2025-06-07').is_workday is False, 'A Saturday'
+        assert KTDay('2025-08-25').is_workday is False, 'Bank Hol in UK'
+        assert KTDay('2025-06-02', cal_country_code='IT').is_workday is False, 'Bank Hol in Italy'
 
     def test_str_and_repr(self):
         assert str(KTDay('2025-06-02')) == '2025-06-02'
@@ -175,7 +176,7 @@ class TestKTCalendar:
         ktd = cal.get_ktday('2025-06-02', label='festa')
         assert ktd == KTDay('2025-06-02')
         assert ktd.ktcalendar is cal
-        assert ktd.get_country_code() == 'IT'
+        assert ktd.ktcalendar.country_calendar_code == 'IT'
         assert ktd.label == 'festa'  # type: ignore[attr-defined]
 
     def test_itermonthdates(self):
@@ -270,8 +271,8 @@ class TestKTCalendar:
 
         last_may_monday = list(rm_cal.days_in_months(2025, 5))[28]
         assert last_may_monday is not None
-        assert last_may_monday.is_holiday() is False
+        assert last_may_monday.is_holiday is False
 
         last_may_monday = list(uk_cal.days_in_months(2025, 5))[28]
         assert last_may_monday is not None
-        assert last_may_monday.is_holiday() is True  # The last Monday in May is a bank holiday
+        assert last_may_monday.is_holiday is True  # The last Monday in May is a bank holiday

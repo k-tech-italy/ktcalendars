@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import datetime
 from calendar import Calendar
+
+import holidays
 from typing_extensions import override
 from typing import TYPE_CHECKING
 
@@ -16,19 +18,32 @@ if TYPE_CHECKING:
     from collections.abc import Iterator
 
 
-__all__ = ["KTCalendar"]
+__all__ = ["KTCalendar", "WEEKEND_MAP"]
+
 
 
 class KTCalendar(Calendar):
     """A holiday-aware calendar that generates KTDay instances for a country calendar."""
 
     @override
-    def __init__(self, firstweekday: int = 0, country_code: str | None = None) -> None:
+    def __init__(self, firstweekday: int = 0, country_code: str | None = None, weekends: tuple | None = None, **kwargs) -> None:
         super().__init__(firstweekday)
         if country_code is None:
             self.country_calendar_code = self.__class__.get_default_country_code()
         else:
             self.country_calendar_code = country_code
+        if '-' in self.country_calendar_code:
+            country, subdiv = self.country_calendar_code.split('-')
+        else:
+            country, subdiv = self.country_calendar_code, None
+        self.holidays = holidays.country_holidays(country=country, subdiv=subdiv, **kwargs)
+        self.weekend_days = weekends or {
+            'EG': (4, 5),
+            'SA': (4, 5),
+            'AE': (4, 5),  # Fri, Sat
+            'NP': (6,),
+            'IR': (4,),  # Single days
+        }.get(country, (5, 6))  # default to Sat, Sun
 
     @staticmethod
     def get_default_country_code() -> str:
@@ -79,7 +94,7 @@ class KTCalendar(Calendar):
     ) -> Iterable[KTDay]:
         """Iterate over all working days between from_date and to_date."""
         for day in self.iter_dates(from_date, to_date):
-            if not day.is_non_working_day(country_calendar_code=self.country_calendar_code):
+            if day.is_workday:
                 yield day
 
     def get_non_work_days(
@@ -87,7 +102,7 @@ class KTCalendar(Calendar):
     ) -> Iterable[KTDay]:
         """Iterate over all non-working days between from_date and to_date."""
         for day in self.iter_dates(from_date, to_date):
-            if day.is_non_working_day(country_calendar_code=self.country_calendar_code):
+            if not day.is_workday:
                 yield day
 
     def week_for(self, date: KTDay | datetime.date | str | None = None) -> tuple[KTDay, KTDay]:
