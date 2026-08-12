@@ -4,31 +4,61 @@ from __future__ import annotations
 
 import datetime
 from calendar import Calendar
-from typing_extensions import override
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 
-from dateutil.relativedelta import relativedelta, MO, SU
+import holidays
+from dateutil.relativedelta import MO, SU, relativedelta
+from typing_extensions import Unpack, override
+
 from .config import get_configuration
 from .days import KTDay
 
+
 if TYPE_CHECKING:
-    from collections.abc import Iterable
-    from collections.abc import Iterator
+    from collections.abc import Iterable, Iterator
 
 
 __all__ = ["KTCalendar"]
+
+
+class CountryHolidaysKwargs(TypedDict, total=False):
+    """Options forwarded verbatim to holidays.country_holidays."""
+
+    years: int | Iterable[int] | None
+    expand: bool
+    observed: bool
+    language: str | None
+    categories: str | Iterable[str] | None
 
 
 class KTCalendar(Calendar):
     """A holiday-aware calendar that generates KTDay instances for a country calendar."""
 
     @override
-    def __init__(self, firstweekday: int = 0, country_code: str | None = None) -> None:
+    def __init__(
+        self,
+        firstweekday: int = 0,
+        country_code: str | None = None,
+        weekends: tuple[int, ...] | None = None,
+        **kwargs: Unpack[CountryHolidaysKwargs],
+    ) -> None:
         super().__init__(firstweekday)
         if country_code is None:
             self.country_calendar_code = self.__class__.get_default_country_code()
         else:
             self.country_calendar_code = country_code
+        if '-' in self.country_calendar_code:
+            country, subdiv = self.country_calendar_code.split('-')
+        else:
+            country, subdiv = self.country_calendar_code, None
+        self.holidays = holidays.country_holidays(country=country, subdiv=subdiv, **kwargs)
+        self.weekend_days = weekends or {
+            'EG': (4, 5),
+            'SA': (4, 5),
+            'AE': (4, 5),  # Fri, Sat
+            'NP': (6,),
+            'IR': (4,),  # Single days
+        }.get(country, (5, 6))  # default to Sat, Sun
 
     @staticmethod
     def get_default_country_code() -> str:
@@ -79,7 +109,7 @@ class KTCalendar(Calendar):
     ) -> Iterable[KTDay]:
         """Iterate over all working days between from_date and to_date."""
         for day in self.iter_dates(from_date, to_date):
-            if not day.is_non_working_day(country_calendar_code=self.country_calendar_code):
+            if day.is_workday:
                 yield day
 
     def get_non_work_days(
@@ -87,7 +117,7 @@ class KTCalendar(Calendar):
     ) -> Iterable[KTDay]:
         """Iterate over all non-working days between from_date and to_date."""
         for day in self.iter_dates(from_date, to_date):
-            if day.is_non_working_day(country_calendar_code=self.country_calendar_code):
+            if not day.is_workday:
                 yield day
 
     def week_for(self, date: KTDay | datetime.date | str | None = None) -> tuple[KTDay, KTDay]:

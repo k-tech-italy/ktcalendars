@@ -8,11 +8,12 @@ import typing
 from dateutil.relativedelta import relativedelta
 
 from ktcalendars.config import get_configuration
-from ktcalendars.utils import dt, get_country_holidays
+from ktcalendars.utils import dt
 
 
 if typing.TYPE_CHECKING:
     from collections.abc import Iterator
+
     from ktcalendars.calendar import KTCalendar
 
 
@@ -34,14 +35,16 @@ class KTDay:
         provided, its country calendar code is used for holiday checks;
         any extra keyword arguments are set as instance attributes.
         """
-        self.date: datetime.date
-        self.ktcalendar: KTCalendar | None = ktcalendar
-        if ktcalendar:
-            self.country_code: str | None = ktcalendar.country_calendar_code
-        else:
-            self.country_code = None
+        from ktcalendars.calendar import KTCalendar  # noqa: PLC0415
+
+        cal_kwargs: dict[str, typing.Any] = {k[4:]: v for k, v in kwargs.items() if k.startswith("cal_")}
+        for k in cal_kwargs:
+            del kwargs[f'cal_{k}']
+
+        self.ktcalendar: KTCalendar = ktcalendar or KTCalendar(**cal_kwargs)
         if day is None:
             day = datetime.date.today()
+        self.date: datetime.date
         if isinstance(day, KTDay):
             self.date = day.date
         elif isinstance(day, datetime.date):
@@ -52,17 +55,6 @@ class KTDay:
                 raise ValueError(f"Invalid date: {day!r}")
             self.date = parsed_date
         self.__dict__.update(kwargs)
-
-    def get_country_code(self) -> str:
-        """Return the country code in use for the KTDay.
-
-        Falls back to the default country code of the KTCalendar class.
-        """
-        from ktcalendars.calendar import KTCalendar  # noqa: PLC0415
-
-        if self.country_code is None:
-            return KTCalendar.get_default_country_code()
-        return self.country_code
 
     @property
     def day(self) -> int:
@@ -89,29 +81,27 @@ class KTDay:
         """Return the calendar week of the year for the day."""
         return self.date.isocalendar()[1]
 
-    def is_extra_holiday(self, country_calendar_code: str | None = None) -> bool:
+    @property
+    def is_extra_holiday(self) -> bool:
         """Return True if this day is in the configuration's holiday overrides."""
-        if country_calendar_code is None:
-            country_calendar_code = self.get_country_code()
-        return self.date in get_configuration().get_holiday_overrides(country_calendar_code, self.date, self.date)
-
-    def is_holiday(self, country_calendar_code: str | None = None, include_sundays_as_holiday: bool = True) -> bool:
-        """Return True if this day is a holiday."""
-        if country_calendar_code is None:
-            country_calendar_code = self.get_country_code()
-        if self.is_extra_holiday(country_calendar_code):
-            return True
-        if include_sundays_as_holiday:
-            return not get_country_holidays(country_calendar_code=country_calendar_code).is_working_day(self.date)
-        return self.date in get_country_holidays(country_calendar_code=country_calendar_code)
-
-    def is_non_working_day(self, country_calendar_code: str | None = None) -> bool:
-        """Return true if it is a non working day."""
-        if country_calendar_code is None:
-            country_calendar_code = self.get_country_code()
-        return self.day_of_week_short in self.non_working_days or self.is_holiday(
-            country_calendar_code=country_calendar_code
+        return self.date in get_configuration().get_holiday_overrides(
+            self.ktcalendar.country_calendar_code, self.date, self.date
         )
+
+    @property
+    def is_holiday(self) -> bool:
+        """Return True if this day is a holiday."""
+        return self.date in self.ktcalendar.holidays
+
+    @property
+    def is_weekend(self) -> bool:
+        """Return True if it is a weekend day."""
+        return self.date.weekday() in self.ktcalendar.weekend_days
+
+    @property
+    def is_workday(self) -> bool:
+        """Return true if it is a working day: not a weekend day, nor a holiday, nor an extra holiday."""
+        return not (self.is_weekend or self.is_holiday or self.is_extra_holiday)
 
     @property
     def day_of_week(self) -> str:

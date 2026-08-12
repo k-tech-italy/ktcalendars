@@ -16,7 +16,7 @@ from ktcalendars.days import KTDay
 
 class CompanyClosures(AbstractConfiguration):
     closures_by_country = {
-        'GB-ENG': {
+        'GB': {
             datetime.date(2025, 12, 24): 'Christmas Eve closure',
             datetime.date(2025, 12, 31): "New Year's Eve closure",
             datetime.date(2026, 12, 24): 'Christmas Eve closure',
@@ -24,7 +24,7 @@ class CompanyClosures(AbstractConfiguration):
     }
 
     def get_holiday_overrides(self, country_calendar_code, from_date=None, to_date=None):
-        overrides = self.closures_by_country.get(country_calendar_code, {})
+        overrides = self.closures_by_country.get(country_calendar_code[:2], {})
         return {
             day: name
             for day, name in overrides.items()
@@ -136,9 +136,9 @@ class TestHolidayOverrides:
         assert company_closures_config.get_holiday_overrides('IT') == {}
 
     def test_overrides_are_reflected_by_ktday(self, company_closures_config):
-        assert KTDay('2025-12-24').is_extra_holiday() is True
-        assert KTDay('2025-12-24').is_holiday() is True
-        assert KTDay('2025-12-24').is_non_working_day() is True
-        assert KTDay('2025-12-23').is_extra_holiday() is False
-        assert KTDay('2025-12-23').is_holiday() is False
-        assert KTDay('2025-12-24').is_extra_holiday('IT') is False, 'No overrides for Italy'
+        assert KTDay('2025-12-24').is_extra_holiday is True
+        assert KTDay('2025-12-24').is_holiday is False
+        assert KTDay('2025-12-24').is_workday is False
+        assert KTDay('2025-12-23').is_extra_holiday is False
+        assert KTDay('2025-12-23').is_holiday is False
+        assert KTDay('2025-12-24', cal_country_code='IT').is_extra_holiday is False, 'No overrides for Italy'
