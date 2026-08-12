@@ -2,6 +2,14 @@
 
 Notable changes to ktcalendars, newest first.
 
+## 3.0.0 (2026-08-12)
+
+### Fix
+
+- **mypy-typing**: Fixed typeing for Python 3.10
+- **mypy-typing**: Typed KTCalendar kwargs
+- **Fixed-is_holiday-not-a-property**: Some changes in the properties
+
 ## 2.0.0 (2026-08-11)
 
 ### BREAKING CHANGE
