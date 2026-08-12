@@ -51,6 +51,36 @@ class ItalianCalendar(KTCalendar):
         return "IT"
 ```
 
+### Weekend days
+
+Each `KTCalendar` knows which weekdays are the weekend, exposed as
+`weekend_days` (numbers as per `datetime.date.weekday()`: Monday is 0,
+Sunday is 6). The default is Saturday and Sunday, with built-in exceptions
+for countries with a different weekend (e.g. Friday–Saturday for Egypt,
+Saudi Arabia and the United Arab Emirates); pass `weekends` to override:
+
+```python
+from ktcalendars import KTCalendar
+
+KTCalendar(country_code="EG").weekend_days  # (4, 5) — Friday and Saturday
+KTCalendar(country_code="IT").weekend_days  # (5, 6) — Saturday and Sunday
+
+cal = KTCalendar(country_code="IT", weekends=(6,))  # Sunday-only weekend
+cal.get_ktday("2025-06-07").is_weekend  # False (a Saturday)
+```
+
+### Holiday calendar options
+
+Extra keyword arguments to `KTCalendar(...)` are forwarded verbatim to
+[`holidays.country_holidays`](https://pypi.org/project/holidays/)
+(`years`, `expand`, `observed`, `language`, `categories`), and the
+resulting holiday calendar is available as `cal.holidays`:
+
+```python
+cal = KTCalendar(country_code="IT", language="it")
+cal.holidays.get("2025-06-02")  # 'Festa della Repubblica'
+```
+
 ### Holiday overrides
 
 To add holidays that are not part of the official country calendar
@@ -99,25 +129,31 @@ class CompanyConfiguration(AbstractConfiguration):
 
 `KTDay` wraps a `datetime.date` and accepts another `KTDay`, a
 `datetime.date`, a string (`YYYY-MM-DD`, `YYYY/MM/DD` or `YYYYMMDD`) or
-`None` (today):
+`None` (today).
+
+Every `KTDay` is bound to a `KTCalendar`: pass one with the `ktcalendar`
+argument, or let the day create its own — `cal_`-prefixed keyword arguments
+(e.g. `cal_country_code="IT"`) are forwarded to the `KTCalendar`
+constructor, and without them the default country code is used:
 
 ```python
 from ktcalendars import KTDay
 
-day = KTDay("2025-06-02")
+day = KTDay("2025-06-02", cal_country_code="IT")
 day.day_of_week      # 'Monday'
 day.week_of_year     # 23
 day + 7              # K2025-06-09
 day - KTDay("2025-05-31")  # 2 (days)
-day.is_holiday("IT")       # True (Festa della Repubblica)
+day.is_holiday       # True (Festa della Repubblica)
+day.is_workday       # False
 ```
 
 See the [KTDay examples](examples/ktday.md) for more.
 
 ### KTCalendar
 
-`KTCalendar` binds days to a country calendar, so holiday checks need no
-explicit code:
+`KTCalendar` binds days to a country calendar, so holiday and work-day
+checks need no explicit code:
 
 ```python
 from ktcalendars import KTCalendar
@@ -125,8 +161,8 @@ from ktcalendars import KTCalendar
 cal = KTCalendar(country_code="IT")
 
 day = cal.get_ktday("2025-06-02")
-day.is_holiday()  # True
-day.is_non_working_day()  # True
+day.is_holiday  # True
+day.is_workday  # False
 
 # Work days between two dates (both inclusive)
 cal.get_work_days("2025-06-01", "2025-06-08")

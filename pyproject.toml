@@ -7,7 +7,7 @@ requires = [
 
 [project]
 name = "ktcalendars"
-description = ""
+description = "Country-specific holiday-aware calendars and dates"
 readme = "README.md"
 license = "Apache-2.0"
 license-files = [ "NOTICE.md", "LICENSE.md" ]

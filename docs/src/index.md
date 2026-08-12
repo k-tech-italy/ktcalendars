@@ -7,7 +7,7 @@ KTCalendars is a library providing utility classes for country-specific holiday-
 It builds on the [holidays](https://pypi.org/project/holidays/) package and provides:
 
 * **`KTDay`** — a rich day object with date parsing, arithmetic, comparisons and holiday checks.
-* **`KTCalendar`** — a `calendar.Calendar` subclass bound to a country calendar, with work-day and week iteration helpers.
+* **`KTCalendar`** — a `calendar.Calendar` subclass bound to a country calendar, with configurable weekend days and work-day and week iteration helpers.
 * **`AbstractConfiguration`** — a pluggable configuration class, selected via the `KTCALENDAR_CONFIG` environment variable, centralising holiday overrides (e.g. company closures) and the default country calendar code.
 
 Head over to [Getting started](usage.md) for configuration and usage, or browse the [examples](examples/ktday.md).
@@ -35,4 +35,4 @@ See the [contribution guide](contributing.md).
 
 ## Licensing
 
-All rights reserved.
+Licensed under the [Apache License 2.0](https://github.com/k-tech-italy/ktcalendars/blob/master/LICENSE.md).

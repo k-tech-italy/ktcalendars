@@ -2,11 +2,41 @@
 
 Notable changes to ktcalendars, newest first.
 
-## Unreleased
+## 3.0.0 (2026-08-12)
 
-### Breaking changes !!
+### BREAKING CHANGE
 
-* The `AbstractExtraHolidayProvider` / `EXTRA_HOLIDAY_PROVIDER` mechanism was
+- `KTDay.is_holiday` and `KTDay.is_extra_holiday` are now read-only
+  properties: they no longer accept a country calendar code or the
+  `include_sundays_as_holiday` flag. The country code comes from the
+  `KTCalendar` the day is bound to, and Sundays are covered by the new
+  `is_weekend` property.
+- `KTDay.is_non_working_day()` was removed: use the new `is_workday`
+  property (note the inverted meaning), or `is_weekend` / `is_holiday` /
+  `is_extra_holiday` for the individual conditions.
+- Every `KTDay` is now bound to a `KTCalendar`: one is created when none is
+  passed, and `cal_`-prefixed keyword arguments (e.g.
+  `cal_country_code="IT"`) are forwarded to the `KTCalendar` constructor.
+
+### Feat
+
+- `KTCalendar` accepts a `weekends` tuple of weekday numbers (Monday is 0),
+  defaulting per country (e.g. Friday–Saturday for EG, SA and AE), exposed
+  as `weekend_days` and used by `KTDay.is_weekend` / `is_workday`.
+- `KTCalendar` forwards holiday options (`years`, `expand`, `observed`,
+  `language`, `categories`) to `holidays.country_holidays` and exposes the
+  resulting holiday calendar as `cal.holidays`.
+
+### Fix
+
+- **mypy-typing**: `Unpack` is imported from `typing_extensions` so the
+  package works on Python 3.10.
+
+## 2.0.0 (2026-08-11)
+
+### BREAKING CHANGE
+
+- The `AbstractExtraHolidayProvider` / `EXTRA_HOLIDAY_PROVIDER` mechanism was
   removed (`ktcalendars.providers` no longer exists and the
   `EXTRA_HOLIDAY_PROVIDER` environment variable is no longer read). Extra
   holidays are now provided by the configuration class: migrate your provider
@@ -15,15 +45,19 @@ Notable changes to ktcalendars, newest first.
 
 ### Feat
 
-* New pluggable configuration class (Req 001): set the `KTCALENDAR_CONFIG`
-  environment variable to the fully qualified name of an
+- **config**: new pluggable configuration class (Req 001): set the
+  `KTCALENDAR_CONFIG` environment variable to the fully qualified name of an
   `AbstractConfiguration` subclass to centralise holiday overrides and the
   default country calendar code. The configuration is loaded lazily and
   cached; `ktcalendars.config.reset_configuration()` reloads it.
-* The default country calendar code is now resolved from the new
+- The default country calendar code is now resolved from the new
   `KTCALENDAR_COUNTRY` environment variable, falling back to the deprecated
   `DEFAULT_HOLIDAYS_CALENDAR` one (which now emits a `DeprecationWarning`)
   and finally to `GB-ENG`.
+
+### Fix
+
+- **cz**: read the current version from SCM tags
 
 ## 1.0.0 (2026-08-10)
 
