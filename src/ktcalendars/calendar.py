@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import datetime
 from calendar import Calendar
-from typing import TYPE_CHECKING, TypedDict, Unpack
+from typing import TYPE_CHECKING, TypedDict
 
 import holidays
 from dateutil.relativedelta import MO, SU, relativedelta
-from typing_extensions import override
+from typing_extensions import Unpack, override
 
 from .config import get_configuration
 from .days import KTDay
@@ -39,7 +39,7 @@ class KTCalendar(Calendar):
         self,
         firstweekday: int = 0,
         country_code: str | None = None,
-        weekends: tuple | None = None,
+        weekends: tuple[int, ...] | None = None,
         **kwargs: Unpack[CountryHolidaysKwargs],
     ) -> None:
         super().__init__(firstweekday)
