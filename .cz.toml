@@ -7,4 +7,7 @@ version_scheme = "pep440"
 # don't rewrite any version file on bump.
 version_provider = "scm"
 update_changelog_on_bump = true
-changelog_start_rev = "0.8.0"
+# Tell cz to only update its own file when bumping versions
+version_files = [
+    "cz.toml:version"
+]

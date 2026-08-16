@@ -85,3 +85,7 @@ addopts = [
 
 [tool.uv]
 default-groups = [ "dev", "checks" ]
+
+[tool.hatch.version.raw-options]
+# Ensures the local version matches standard PEP 440 formatting
+local_scheme = "no-local-version"
