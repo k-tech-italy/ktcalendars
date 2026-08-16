@@ -79,13 +79,21 @@ list(KTDay("2025-06-01").range_to("2025-06-03"))
 # [K2025-06-01, K2025-06-02, K2025-06-03]
 ```
 
-## Holiday checks
+## Holiday and work-day checks
 
-Without an explicit country calendar code, the default one is used
+Every `KTDay` is bound to a `KTCalendar` which drives these checks:
+`cal_`-prefixed keyword arguments are forwarded to the `KTCalendar`
+constructor, and without them the default country calendar code is used
 (see [Getting started](../usage.md#configuration)):
 
 ```python
-KTDay("2025-06-02").is_holiday("IT")          # True (Festa della Repubblica)
-KTDay("2025-06-02").is_holiday("GB-ENG")      # False
-KTDay("2025-06-07").is_non_working_day("IT")  # True (Saturday)
+KTDay("2025-06-02", cal_country_code="IT").is_holiday      # True (Festa della Repubblica)
+KTDay("2025-06-02", cal_country_code="GB-ENG").is_holiday  # False
+KTDay("2025-06-07").is_weekend                             # True (Saturday)
+KTDay("2025-06-07").is_workday                             # False
+KTDay("2025-06-02", cal_country_code="IT").is_workday      # False (holiday)
 ```
+
+`is_workday` is True when the day is not a weekend day, not a holiday and
+not an extra holiday; `is_extra_holiday` checks the configuration's
+[holiday overrides](../usage.md#holiday-overrides).

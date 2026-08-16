@@ -7,7 +7,7 @@ requires = [
 
 [project]
 name = "ktcalendars"
-description = ""
+description = "Country-specific holiday-aware calendars and dates"
 readme = "README.md"
 license = "Apache-2.0"
 license-files = [ "NOTICE.md", "LICENSE.md" ]
@@ -24,6 +24,10 @@ dependencies = [
   "holidays",
   "pytest-xdist>=3.8",
   "typing-extensions>=4.15",
+]
+
+optional-dependencies.psycopg = [
+  "psycopg>=2.9.1",
 ]
 
 [dependency-groups]

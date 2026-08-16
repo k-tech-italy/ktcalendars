@@ -6,6 +6,7 @@ relative_files = True
 # partial_branches =
 omit =
     **/~*/*
+    src/ktcalendars/version.py
 disable_warnings =
     module-not-measured
 

@@ -4,7 +4,7 @@ from contextlib import nullcontext as does_not_raise
 
 import pytest
 
-from ktcalendars.utils import dt
+from ktcalendars.utils import dt, get_country_holidays
 
 
 @pytest.mark.parametrize(
@@ -48,3 +48,20 @@ def test_dt(day: typing.Any, outcome, expectation):
             assert result is outcome
         else:
             assert dt(day) == outcome
+
+
+def test_get_country_holidays_plain_code():
+    cal = get_country_holidays("IT")
+    assert datetime.date(2025, 6, 2) in cal  # Festa della Repubblica
+    assert cal.weekend == {6}
+
+
+def test_get_country_holidays_with_subdivision():
+    cal = get_country_holidays("GB-ENG")
+    assert datetime.date(2025, 8, 25) in cal  # Summer bank holiday (England only)
+
+
+def test_get_country_holidays_default_code():
+    # Without a code, the configuration's default country code (GB-ENG) is used
+    cal = get_country_holidays()
+    assert datetime.date(2025, 8, 25) in cal
