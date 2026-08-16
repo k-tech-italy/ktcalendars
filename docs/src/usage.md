@@ -177,3 +177,49 @@ list(cal.iter_week("2025-06-04"))
 list(cal.month_weeks_days(2025, 6))  # complete weeks, includes adjacent months
 list(cal.days_in_months(2025, 6))  # complete weeks, None outside the month
 ```
+
+### KTDateRange
+
+`KTDateRange` subclasses
+[psycopg's `DateRange`](https://www.psycopg.org/psycopg3/docs/basic/adapt.html#range-adaptation)
+and requires the `psycopg` extra (`pip install ktcalendars[psycopg]`). The
+bounds accept anything a `KTDay` accepts (a `KTDay`, a `datetime.date` or a
+date string), and a range can also be built from another `DateRange` or from
+a `(start, end)` tuple.
+
+Like PostgreSQL, ranges are always stored in the canonical form for discrete
+types — lower bound included, upper bound excluded (`[)`). Bounds passed with
+a different inclusivity are shifted by one day, and a range that
+canonicalises to nothing becomes the *empty* range:
+
+```python
+from ktcalendars.ranges import KTDateRange
+
+KTDateRange("2025-06-01", "2025-06-04")                # 2025-06-01 to 2025-06-03
+KTDateRange.from_start_end("2025-06-01", "2025-06-03")  # same range, both bounds included
+KTDateRange("2025-06-01", None)                        # unbounded above
+KTDateRange("2025-06-01", "2025-06-01").isempty        # True — [) with equal bounds
+
+r = KTDateRange("2025-06-01", "2025-06-04")
+"2025-06-03" in r          # True
+"2025-06-04" in r          # False — upper bound excluded
+list(r)                    # [K2025-06-01, K2025-06-02, K2025-06-03]
+```
+
+The comparison, containment and intersection helpers accept another range or
+a single day (treated as the one-day range covering it):
+
+```python
+a = KTDateRange("2025-06-01", "2025-06-10")
+b = KTDateRange("2025-06-05", "2025-06-20")
+
+a.overlap(b)               # True
+a.intersection(b)          # [2025-06-05:2025-06-10)
+a.contains("2025-06-05")   # True
+a.fully_lt("2025-06-15")   # True — the whole range is before that day
+a.precedes(b.lower)        # False;  a.precedes("2025-06-10") is True (adjacent)
+a.adjacent_to(KTDateRange("2025-06-10", "2025-06-20"))  # True
+```
+
+See the [KTDateRange examples](examples/ktdaterange.md) for the full set of
+helpers and the empty-range semantics.

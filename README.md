@@ -21,6 +21,10 @@ provides:
 * **`AbstractConfiguration`** — a pluggable configuration class centralising
   holiday overrides (e.g. company closures) and the default country calendar
   code.
+* **`KTDateRange`** — a [psycopg](https://pypi.org/project/psycopg/)
+  `DateRange` subclass with PostgreSQL-canonical `[)` bounds, `KTDay`
+  iteration and rich comparison, containment and intersection helpers
+  (requires the `psycopg` extra).
 
 ```python
 from ktcalendars import KTCalendar
@@ -66,6 +70,24 @@ list(cal.iter_week("2025-06-04"))    # the seven days of that week
 list(cal.month_weeks_days(2025, 6))  # complete weeks covering June 2025
 ```
 
+### Date ranges
+
+`KTDateRange` (requires the `psycopg` extra) stores date ranges in the
+PostgreSQL canonical form — lower bound included, upper bound excluded:
+
+```python
+from ktcalendars.ranges import KTDateRange
+
+r = KTDateRange("2025-06-01", "2025-06-04")           # upper bound excluded
+list(r)                                               # [K2025-06-01, K2025-06-02, K2025-06-03]
+KTDateRange.from_start_end("2025-06-01", "2025-06-03")  # both bounds included, same range
+
+"2025-06-03" in r                                     # True
+r.overlap(KTDateRange("2025-06-03", "2025-06-10"))    # True
+r.intersection(("2025-06-03", "2025-06-10"))          # [2025-06-03:2025-06-04)
+r.precedes("2025-06-04")                              # True — adjacent, just before that day
+```
+
 ### Company-specific holidays
 
 Point the `KTCALENDAR_CONFIG` environment variable to a subclass of
@@ -104,6 +126,12 @@ Install ktcalendars using your package manager of choice, e.g. Pip:
 
 ```bash
 pip install ktcalendars
+```
+
+To use `KTDateRange`, install the `psycopg` extra:
+
+```bash
+pip install ktcalendars[psycopg]
 ```
 
 ## Bug reports and requests for enhancements

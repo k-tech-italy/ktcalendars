@@ -26,6 +26,10 @@ dependencies = [
   "typing-extensions>=4.15",
 ]
 
+optional-dependencies.psycopg = [
+  "psycopg>=2.9.1",
+]
+
 [dependency-groups]
 dev = [
   "diff-cover>=10.5",
