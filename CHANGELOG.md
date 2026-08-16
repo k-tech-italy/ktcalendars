@@ -2,7 +2,7 @@
 
 Notable changes to ktcalendars, newest first.
 
-## 1.0.0 (2026-08-16)
+## 3.1.0 (2026-08-16)
 
 ### Feat
 
@@ -10,7 +10,6 @@ Notable changes to ktcalendars, newest first.
 
 ### Fix
 
-- **versioning**: Fixing versioning
 - **Documentation**: Improved docs and README
 
 ## 3.0.0 (2026-08-12)
