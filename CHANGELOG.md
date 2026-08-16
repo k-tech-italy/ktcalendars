@@ -2,6 +2,16 @@
 
 Notable changes to ktcalendars, newest first.
 
+## 3.1.0 (2026-08-16)
+
+### Feat
+
+- **KTDateRange-with-psycopg**: Introduced KTDateRange with optional psycopg dependency
+
+### Fix
+
+- **Documentation**: Improved docs and README
+
 ## 3.0.0 (2026-08-12)
 
 ### BREAKING CHANGE
