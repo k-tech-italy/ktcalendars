@@ -130,6 +130,39 @@ class TestKTDay:
         assert KTDay('2025-06-02') == KTDay(dt('2025-06-02'))
         assert KTDay('2025-06-02') == KTDay(KTDay('2025-06-02'))
 
+    def test_add_sub_preserve_calendar(self):
+        cal = KTCalendar(country_code='IT')
+        day = KTDay('2025-06-01', ktcalendar=cal)
+        assert (day + 1).ktcalendar is cal
+        assert (day + datetime.timedelta(days=1)).ktcalendar is cal
+        assert (day + relativedelta(months=1)).ktcalendar is cal
+        for derived in (day - 1, day - datetime.timedelta(days=1), day - relativedelta(months=1)):
+            assert isinstance(derived, KTDay)
+            assert derived.ktcalendar is cal
+
+    def test_add_preserves_holiday_check(self):
+        assert (KTDay('2025-06-01', cal_country_code='IT') + 1).is_holiday is True, 'Should be Bank Hol in Italy'
+
+    def test_range_to_preserves_calendar(self):
+        day = KTDay('2025-06-01', cal_country_code='IT')
+        assert all(x.ktcalendar is day.ktcalendar for x in day.range_to(KTDay('2025-06-03')))
+
+    def test_copy_inherits_calendar(self):
+        cal = KTCalendar(country_code='IT')
+        day = KTDay('2025-06-01', ktcalendar=cal)
+        assert KTDay(day).ktcalendar is cal
+        other = KTCalendar(country_code='GB-ENG')
+        assert KTDay(day, ktcalendar=other).ktcalendar is other
+        assert KTDay(day, cal_country_code='GB-ENG').ktcalendar.country_calendar_code == 'GB-ENG'
+
+    def test_arithmetic_preserves_subclass(self):
+        class MyDay(KTDay):
+            pass
+
+        day = MyDay('2025-06-01')
+        assert isinstance(day + 1, MyDay)
+        assert isinstance(day - 1, MyDay)
+
     def test_is_holiday(self):
         assert KTDay('2025-06-02', cal_country_code='IT').is_holiday is True, 'Should be Bank Hol in Italy'
         assert KTDay('2023-06-29', cal_country_code='IT').is_holiday is False, 'Should not be Bank Hol in Italy'

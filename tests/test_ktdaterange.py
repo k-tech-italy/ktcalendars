@@ -1,10 +1,12 @@
 import datetime
+import pickle
 import typing
 from contextlib import nullcontext as does_not_raise
 
 import pytest
 from psycopg.types.range import DateRange
 
+from ktcalendars.calendar import KTCalendar
 from ktcalendars.days import KTDay
 from ktcalendars.ranges import KTDateRange
 from ktcalendars.types import KTDayType
@@ -456,6 +458,81 @@ def test_as_dates_empty():
     dr = KTDateRange(empty=True).as_dates()
     assert dr.isempty
     assert dr.boundaries == (None, None)
+
+
+def test_calendar_binds_produced_days():
+    dr = KTDateRange('2025-06-01', '2025-06-04', cal_country_code='IT')
+    assert dr.ktcalendar.country_calendar_code == 'IT'
+    days = list(dr)
+    assert all(day.ktcalendar is dr.ktcalendar for day in days)
+    assert days[1].is_holiday is True, 'Should be Bank Hol in Italy'
+
+
+def test_calendar_precedence():
+    cal = KTCalendar(country_code='IT')
+    assert KTDateRange('2025-06-01', '2025-06-04', ktcalendar=cal).ktcalendar is cal
+    assert KTDateRange('2025-06-01', '2025-06-04', ktcalendar=cal, cal_country_code='GB-ENG').ktcalendar is cal
+    default = KTDateRange('2025-06-01', '2025-06-04').ktcalendar
+    assert default.country_calendar_code == KTCalendar.get_default_country_code()
+
+
+def test_calendar_copy_inheritance():
+    cal = KTCalendar(country_code='IT')
+    dr = KTDateRange('2025-06-01', '2025-06-04', ktcalendar=cal)
+    assert KTDateRange(dr).ktcalendar is cal
+    other = KTCalendar(country_code='GB-ENG')
+    assert KTDateRange(dr, ktcalendar=other).ktcalendar is other
+    assert KTDateRange(dr, cal_country_code='GB-ENG').ktcalendar.country_calendar_code == 'GB-ENG'
+
+
+def test_calendar_from_start_end():
+    cal = KTCalendar(country_code='IT')
+    dr = KTDateRange.from_start_end('2025-06-01', '2025-06-02', ktcalendar=cal)
+    assert dr.ktcalendar is cal
+    assert all(day.ktcalendar is cal for day in dr)
+
+
+def test_calendar_derived_ranges():
+    cal = KTCalendar(country_code='IT')
+    dr = KTDateRange('2025-06-01', None, ktcalendar=cal)
+    assert dr.as_dates().ktcalendar is cal
+    intersection = dr.intersection(('2025-06-02', '2025-06-10'))
+    assert intersection is not None
+    assert intersection.ktcalendar is cal
+
+
+def test_calendar_empty_range():
+    dr = KTDateRange(empty=True, cal_country_code='IT')
+    assert dr.ktcalendar.country_calendar_code == 'IT'
+
+
+def test_extra_kwargs_become_attributes():
+    dr = KTDateRange('2025-06-01', '2025-06-04', name='sprint-1')
+    assert dr.name == 'sprint-1'
+
+
+def test_equality_ignores_calendar_and_attributes():
+    assert KTDateRange('2025-06-01', '2025-06-04', cal_country_code='IT') == KTDateRange(
+        '2025-06-01', '2025-06-04', cal_country_code='GB-ENG', name='sprint-1'
+    )
+
+
+def test_pickle_preserves_calendar_and_attributes():
+    dr = KTDateRange('2025-06-01', '2025-06-04', cal_country_code='IT', name='sprint-1')
+    roundtripped = pickle.loads(pickle.dumps(dr))
+    assert roundtripped == dr
+    assert roundtripped.ktcalendar.country_calendar_code == 'IT'
+    assert roundtripped.name == 'sprint-1'
+    assert list(roundtripped)[1].is_holiday is True, 'Should be Bank Hol in Italy'
+
+
+def test_parsing_consistency_with_ktday():
+    with pytest.raises(ValueError, match="Invalid date: 'dummy'"):
+        KTDay('dummy')
+    with pytest.raises(ValueError, match="Invalid date: 'dummy'"):
+        KTDateRange('dummy', '2025-06-04')
+    # documented deviation: None means unbounded, not today as in KTDay(None)
+    assert KTDateRange(None, None).boundaries == (None, None)
 
 
 @pytest.mark.parametrize(

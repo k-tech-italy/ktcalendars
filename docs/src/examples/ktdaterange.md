@@ -46,6 +46,30 @@ The lower bound may not be after the upper bound:
 KTDateRange("2025-06-04", "2025-06-01")  # ValueError
 ```
 
+Bounds accept exactly what a `KTDay` accepts and raise the same
+`ValueError` for invalid values, with one deviation: `None` means an
+*unbounded* bound, not "today" as in `KTDay(None)`.
+
+## Calendar awareness
+
+Like `KTDay`, a range is bound to a `KTCalendar`: pass one with
+`ktcalendar`, or let the range create its own — `cal_`-prefixed keyword
+arguments are forwarded to the `KTCalendar` constructor. Every `KTDay` the
+range produces keeps that calendar, and any remaining keyword arguments are
+set as instance attributes:
+
+```python
+r = KTDateRange("2025-06-01", "2025-06-04", cal_country_code="IT", name="sprint-1")
+r.name                                  # 'sprint-1'
+[day.is_holiday for day in r]           # [False, True, False] — 2025-06-02 is a holiday in IT
+
+KTDateRange(r).ktcalendar is r.ktcalendar          # True — copies inherit the calendar
+r.intersection("2025-06-02").ktcalendar is r.ktcalendar  # True — derived ranges too
+```
+
+The calendar does not affect equality: two ranges with the same bounds are
+equal regardless of their calendars or extra attributes.
+
 ## Canonical form
 
 Like PostgreSQL, ranges are always stored in the canonical form for discrete

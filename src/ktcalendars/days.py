@@ -33,7 +33,9 @@ class KTDay:
         `day` can be another KTDay, a datetime.date, a date string parseable
         by `ktcalendars.utils.dt` or None (today). If a `ktcalendar` is
         provided, its country calendar code is used for holiday checks;
-        any extra keyword arguments are set as instance attributes.
+        without one (and without `cal_`-prefixed keyword arguments) a KTDay
+        passed as `day` hands down its own calendar. Any extra keyword
+        arguments are set as instance attributes.
         """
         from ktcalendars.calendar import KTCalendar  # noqa: PLC0415
 
@@ -41,7 +43,13 @@ class KTDay:
         for k in cal_kwargs:
             del kwargs[f'cal_{k}']
 
-        self.ktcalendar: KTCalendar = ktcalendar or KTCalendar(**cal_kwargs)
+        self.ktcalendar: KTCalendar
+        if ktcalendar is not None:
+            self.ktcalendar = ktcalendar
+        elif not cal_kwargs and isinstance(day, KTDay):
+            self.ktcalendar = day.ktcalendar
+        else:
+            self.ktcalendar = KTCalendar(**cal_kwargs)
         if day is None:
             day = datetime.date.today()
         self.date: datetime.date
@@ -193,7 +201,7 @@ class KTDay:
         ignored.
 
         :param other: the number of days or period of time to add.
-        :return: a new `KTDay` instance.
+        :return: a new `KTDay` instance bound to the same calendar.
         """
         if isinstance(other, int):
             delta = relativedelta(days=other)
@@ -203,7 +211,7 @@ class KTDay:
             delta = relativedelta(years=other.years, months=other.months, days=other.days)
         else:
             raise TypeError(f"Cannot add {type(other)} to a KTDay")
-        return KTDay(self.date + delta)
+        return self.__class__(self.date + delta, ktcalendar=self.ktcalendar)
 
     def __repr__(self) -> str:
         return self.date.strftime("K%Y-%m-%d")

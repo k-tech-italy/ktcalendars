@@ -78,6 +78,10 @@ build.targets.sdist.exclude = [
 build.targets.wheel.packages = [ "src/ktcalendars" ]
 version.source = "vcs"
 
+[tool.hatch.version.raw-options]
+# Ensures the local version matches standard PEP 440 formatting
+local_scheme = "no-local-version"
+
 [tool.pytest.ini_options]
 addopts = [
   "--import-mode=importlib",
@@ -85,7 +89,3 @@ addopts = [
 
 [tool.uv]
 default-groups = [ "dev", "checks" ]
-
-[tool.hatch.version.raw-options]
-# Ensures the local version matches standard PEP 440 formatting
-local_scheme = "no-local-version"
