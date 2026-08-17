@@ -2,6 +2,12 @@
 
 Notable changes to ktcalendars, newest first.
 
+## 3.2.0 (2026-08-17)
+
+### Feat
+
+- **calendar-awareness**: KTDay derived days and KTDateRange keep their KTCalendar
+
 ## 3.1.1 (2026-08-16)
 
 ### Fix
