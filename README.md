@@ -14,17 +14,18 @@ It builds on the [holidays](https://pypi.org/project/holidays/) package and
 provides:
 
 * **`KTDay`** — a rich day object with date parsing, arithmetic, comparisons
-  and holiday/work-day checks.
+  and holiday/work-day checks; every day is bound to a `KTCalendar`, and
+  derived days (arithmetic results, copies) keep it.
 * **`KTCalendar`** — a `calendar.Calendar` subclass bound to a country
   calendar, with configurable weekend days and work-day and week iteration
   helpers.
 * **`AbstractConfiguration`** — a pluggable configuration class centralising
   holiday overrides (e.g. company closures) and the default country calendar
   code.
-* **`KTDateRange`** — a [psycopg](https://pypi.org/project/psycopg/)
-  `DateRange` subclass with PostgreSQL-canonical `[)` bounds, `KTDay`
-  iteration and rich comparison, containment and intersection helpers
-  (requires the `psycopg` extra).
+* **`KTDateRange`** — a calendar-aware
+  [psycopg](https://pypi.org/project/psycopg/) `DateRange` subclass with
+  PostgreSQL-canonical `[)` bounds, `KTDay` iteration and rich comparison,
+  containment and intersection helpers (requires the `psycopg` extra).
 
 ```python
 from ktcalendars import KTCalendar
@@ -49,6 +50,9 @@ day - KTDay("2025-05-31")   # 2 (days)
 day == "2025-06-02"         # True
 list(KTDay("2025-06-01").range_to("2025-06-03"))
 # [K2025-06-01, K2025-06-02, K2025-06-03]
+
+day = KTDay("2025-06-01", cal_country_code="IT")
+(day + 1).is_holiday        # True — derived days keep the calendar (2025-06-02 is an IT holiday)
 ```
 
 ### Weekend days per country
@@ -86,6 +90,10 @@ KTDateRange.from_start_end("2025-06-01", "2025-06-03")  # both bounds included, 
 r.overlap(KTDateRange("2025-06-03", "2025-06-10"))    # True
 r.intersection(("2025-06-03", "2025-06-10"))          # [2025-06-03:2025-06-04)
 r.precedes("2025-06-04")                              # True — adjacent, just before that day
+
+# Ranges are calendar-aware, like KTDay
+r = KTDateRange("2025-06-01", "2025-06-04", cal_country_code="IT")
+[day.is_holiday for day in r]                         # [False, True, False] — days keep the calendar
 ```
 
 ### Company-specific holidays

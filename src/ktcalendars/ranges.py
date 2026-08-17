@@ -7,6 +7,7 @@ import typing
 
 from psycopg.types.range import DateRange, Range
 
+from ktcalendars.calendar import KTCalendar
 from ktcalendars.days import KTDay
 
 
@@ -40,6 +41,11 @@ class KTDateRange(DateRange):
 
     In the comparison methods, `other` can be a range or a single day; a single day is treated as
     the one-day range covering it.
+
+    Like KTDay, a range is bound to a KTCalendar: pass one with `ktcalendar`, or let the range
+    create its own — `cal_`-prefixed keyword arguments are forwarded to the KTCalendar constructor,
+    and without them a KTDateRange passed as `lower` hands down its own calendar. The calendar binds
+    every KTDay the range produces; any remaining keyword arguments are set as instance attributes.
     """
 
     def __init__(
@@ -52,7 +58,21 @@ class KTDateRange(DateRange):
         upper: KTDayType | None = None,
         bounds: str = '[)',
         empty: bool = False,
+        ktcalendar: KTCalendar | None = None,
+        **kwargs: object,
     ) -> None:
+        cal_kwargs: dict[str, typing.Any] = {k[4:]: v for k, v in kwargs.items() if k.startswith('cal_')}
+        for k in cal_kwargs:
+            del kwargs[f'cal_{k}']
+
+        self.ktcalendar: KTCalendar
+        if ktcalendar is not None:
+            self.ktcalendar = ktcalendar
+        elif not cal_kwargs and isinstance(lower, KTDateRange):
+            self.ktcalendar = lower.ktcalendar
+        else:
+            self.ktcalendar = KTCalendar(**cal_kwargs)
+
         start: datetime.date | None
         end: datetime.date | None
         if isinstance(lower, Range):
@@ -60,8 +80,11 @@ class KTDateRange(DateRange):
         else:
             if isinstance(lower, tuple | list):
                 lower, upper = lower
-            start = KTDay(typing.cast('KTDayType', lower)).date if lower is not None else None
-            end = KTDay(upper).date if upper is not None else None
+            if lower is not None:
+                start = KTDay(typing.cast('KTDayType', lower), ktcalendar=self.ktcalendar).date
+            else:
+                start = None
+            end = KTDay(upper, ktcalendar=self.ktcalendar).date if upper is not None else None
         if start is not None and end is not None and start > end:
             raise ValueError('Lower bound must be smaller than upper bound')
         if not empty:
@@ -78,23 +101,29 @@ class KTDateRange(DateRange):
                 start = end = None
                 empty = True
         super().__init__(start, end, bounds, empty)
+        self.__dict__.update(kwargs)
 
     @staticmethod
-    def from_start_end(start_date: KTDayType, end_date: KTDayType) -> KTDateRange:
+    def from_start_end(
+        start_date: KTDayType, end_date: KTDayType, ktcalendar: KTCalendar | None = None, **kwargs: object
+    ) -> KTDateRange:
         """Build a KTDateRange from a start and end date (included)."""
-        return KTDateRange(lower=start_date, upper=end_date, bounds='[]')
+        extra: dict[str, typing.Any] = dict(kwargs)
+        return KTDateRange(lower=start_date, upper=end_date, bounds='[]', ktcalendar=ktcalendar, **extra)
 
-    @classmethod
     def _as_range(
-        cls,
+        self,
         other: Range[datetime.date] | KTDayType | tuple[KTDayType | None, KTDayType | None] | list[KTDayType | None],
     ) -> KTDateRange:
-        """Coerce `other` to a KTDateRange; a single day becomes the one-day range covering it."""
+        """Coerce `other` to a KTDateRange bound to this range's calendar.
+
+        A single day becomes the one-day range covering it.
+        """
         if isinstance(other, KTDateRange):
             return other
         if isinstance(other, Range | tuple | list):
-            return cls(other)
-        return cls.from_start_end(other, other)
+            return KTDateRange(other, ktcalendar=self.ktcalendar)
+        return KTDateRange.from_start_end(other, other, ktcalendar=self.ktcalendar)
 
     def fully_lt(self, other: Range[datetime.date] | KTDayType) -> bool:
         """Return True if the given date range is fully before the other."""
@@ -156,7 +185,7 @@ class KTDateRange(DateRange):
         """Return the object as a PG DateRange replacing infinite boundaries with datetime.date.min/max."""
         if self.isempty:
             return self
-        return KTDateRange(self.lower or datetime.date.min, self.upper or datetime.date.max)
+        return KTDateRange(self.lower or datetime.date.min, self.upper or datetime.date.max, ktcalendar=self.ktcalendar)
 
     def contains(self, other: Range[datetime.date] | KTDayType) -> bool:
         """Check if range contains other range (any range contains the empty range)."""
@@ -199,13 +228,14 @@ class KTDateRange(DateRange):
         return KTDateRange(
             None if lower == datetime.date.min else lower,
             None if upper == datetime.date.max else upper,
+            ktcalendar=self.ktcalendar,
         )
 
     def __contains__(self, x: KTDayType | None) -> bool:
         """Accept dates and KTDay compatible x; None is never in a range."""
         if x is None:
             return False
-        return super().__contains__(KTDay(x).date)
+        return super().__contains__(KTDay(x, ktcalendar=self.ktcalendar).date)
 
     def __iter__(self) -> Iterator[KTDay]:
         """Return a KTDay iterator over the days in the range.
@@ -217,9 +247,13 @@ class KTDateRange(DateRange):
         lower, upper = self.lower, self.upper
         if lower is None or lower == datetime.date.min or upper is None or upper == datetime.date.max:
             raise TypeError('Cannot iterate over unbounded range')
-        day = KTDay(lower)
+        day = KTDay(lower, ktcalendar=self.ktcalendar)
         for x in range((upper - lower).days):
             yield day + x
+
+    def __getstate__(self) -> dict[str, typing.Any]:
+        """Also persist instance attributes (e.g. the calendar), which the slots-based parent would drop."""
+        return {**super().__getstate__(), **self.__dict__}
 
     def __str__(self) -> str:
         if self.isempty:

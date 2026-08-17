@@ -23,6 +23,9 @@ KTDay(KTDay("2025-06-02"))
 KTDay()  # today
 ```
 
+A copy built from another `KTDay` inherits the source day's calendar,
+unless `ktcalendar` or `cal_`-prefixed keyword arguments are given.
+
 ## Properties
 
 ```python
@@ -70,6 +73,14 @@ KTDay("2025-06-02") - 1                            # K2025-06-01
 KTDay("2025-06-02") + datetime.timedelta(days=3)   # K2025-06-05
 KTDay("2025-06-02") + relativedelta(months=1)      # K2025-07-02
 KTDay("2025-06-05") - KTDay("2025-06-02")          # 3
+```
+
+Derived days stay bound to the calendar of the day they came from:
+
+```python
+day = KTDay("2025-06-01", cal_country_code="IT")
+(day + 1).ktcalendar is day.ktcalendar   # True
+(day + 1).is_holiday                     # True (Festa della Repubblica, IT)
 ```
 
 ## Ranges

@@ -134,7 +134,10 @@ class CompanyConfiguration(AbstractConfiguration):
 Every `KTDay` is bound to a `KTCalendar`: pass one with the `ktcalendar`
 argument, or let the day create its own — `cal_`-prefixed keyword arguments
 (e.g. `cal_country_code="IT"`) are forwarded to the `KTCalendar`
-constructor, and without them the default country code is used:
+constructor, and without them the default country code is used.
+Days derived from an existing day — arithmetic results, the days yielded by
+`range_to`, and copies built with `KTDay(other_day)` — stay bound to the
+calendar of the day they came from:
 
 ```python
 from ktcalendars import KTDay
@@ -184,8 +187,21 @@ list(cal.days_in_months(2025, 6))  # complete weeks, None outside the month
 [psycopg's `DateRange`](https://www.psycopg.org/psycopg3/docs/basic/adapt.html#range-adaptation)
 and requires the `psycopg` extra (`pip install ktcalendars[psycopg]`). The
 bounds accept anything a `KTDay` accepts (a `KTDay`, a `datetime.date` or a
-date string), and a range can also be built from another `DateRange` or from
-a `(start, end)` tuple.
+date string) — with one deviation: `None` means an *unbounded* bound, not
+"today" as in `KTDay(None)`. A range can also be built from another
+`DateRange` or from a `(start, end)` tuple.
+
+Like `KTDay`, a range is bound to a `KTCalendar` — pass `ktcalendar` or
+`cal_`-prefixed keyword arguments exactly as for a
+[`KTDay`](#ktday) — and every `KTDay` the range produces keeps that
+calendar:
+
+```python
+from ktcalendars.ranges import KTDateRange
+
+r = KTDateRange("2025-06-01", "2025-06-04", cal_country_code="IT")
+[day.is_holiday for day in r]  # [False, True, False] — 2025-06-02 is a holiday in IT
+```
 
 Like PostgreSQL, ranges are always stored in the canonical form for discrete
 types — lower bound included, upper bound excluded (`[)`). Bounds passed with
