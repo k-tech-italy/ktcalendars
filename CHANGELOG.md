@@ -2,6 +2,12 @@
 
 Notable changes to ktcalendars, newest first.
 
+## 3.3.0 (2026-08-18)
+
+### Feat
+
+- **ranges**: add KTDateRange.gaps to find uncovered periods in a window
+
 ## 3.2.0 (2026-08-17)
 
 ### Feat
