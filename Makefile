@@ -18,6 +18,9 @@ release: ## cut a release from master: verify branches, cz bump, push master and
 	@tag=$$(git describe --tags --exact-match); \
 	echo "Pushing master and tag $$tag"; \
 	git push origin master "$$tag"
+	git co develop
+	git rebase master
+	git push
 
 test-cov: ## run tests with coverage
 	@pytest tests --junitxml=`pwd`/~build/pytest.xml -vv \
