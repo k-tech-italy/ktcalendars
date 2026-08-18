@@ -5,6 +5,7 @@ from __future__ import annotations
 import datetime
 import typing
 
+from dateutil import relativedelta
 from psycopg.types.range import DateRange, Range
 
 from ktcalendars.calendar import KTCalendar
@@ -206,11 +207,21 @@ class KTDateRange(DateRange):
             return False
         return _lo(self) == _hi(other)
 
-    def as_dates(self) -> KTDateRange:
+    def as_dates(self) -> tuple[datetime.date | None, datetime.date | None]:
         """Return the object as a PG DateRange replacing infinite boundaries with datetime.date.min/max."""
         if self.isempty:
-            return self
-        return KTDateRange(self.lower or datetime.date.min, self.upper or datetime.date.max, ktcalendar=self.ktcalendar)
+            raise ValueError('Unable to extract dates: date range is empty')
+        lower = (
+            datetime.date.min
+            if self.lower_inf
+            else (self.lower + relativedelta.relativedelta(days=0 if self.lower_inc else 1))
+        )
+        upper = (
+            datetime.date.max
+            if self.upper_inf
+            else (self.upper - relativedelta.relativedelta(days=0 if self.upper_inc else 1))
+        )
+        return (lower, upper)
 
     def contains(self, other: Range[datetime.date] | KTDayType) -> bool:
         """Check if range contains other range (any range contains the empty range)."""

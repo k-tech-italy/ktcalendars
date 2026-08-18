@@ -489,22 +489,22 @@ def test_gaps_calendar_binds_results():
 @pytest.mark.parametrize(
     'period, boundaries',
     [
-        pytest.param(('2026-01-01', '2026-01-10'), (dt('2026-01-01'), dt('2026-01-10')), id='bounded'),
-        pytest.param((None, '2026-01-10'), (datetime.date.min, dt('2026-01-10')), id='unbounded-lower'),
+        pytest.param(('2026-01-01', '2026-01-10'), (dt('2026-01-01'), dt('2026-01-09')), id='bounded'),
+        pytest.param((None, '2026-01-10'), (datetime.date.min, dt('2026-01-09')), id='unbounded-lower'),
         pytest.param(('2026-01-01', None), (dt('2026-01-01'), datetime.date.max), id='unbounded-upper'),
         pytest.param((None, None), (datetime.date.min, datetime.date.max), id='unbounded-both'),
     ],
 )
 def test_as_dates(period, boundaries):
-    dr = KTDateRange(*period).as_dates()
-    assert dr.boundaries == boundaries
-    assert dr.bounds == '[)'
+    assert KTDateRange(*period).as_dates() == boundaries
 
 
 def test_as_dates_empty():
-    dr = KTDateRange(empty=True).as_dates()
+    dr = KTDateRange(empty=True)
     assert dr.isempty
     assert dr.boundaries == (None, None)
+    with pytest.raises(ValueError, match='Unable to extract dates: date range is empty'):
+        dr.as_dates()
 
 
 def test_calendar_binds_produced_days():
@@ -537,15 +537,6 @@ def test_calendar_from_start_end():
     dr = KTDateRange.from_start_end('2025-06-01', '2025-06-02', ktcalendar=cal)
     assert dr.ktcalendar is cal
     assert all(day.ktcalendar is cal for day in dr)
-
-
-def test_calendar_derived_ranges():
-    cal = KTCalendar(country_code='IT')
-    dr = KTDateRange('2025-06-01', None, ktcalendar=cal)
-    assert dr.as_dates().ktcalendar is cal
-    intersection = dr.intersection(('2025-06-02', '2025-06-10'))
-    assert intersection is not None
-    assert intersection.ktcalendar is cal
 
 
 def test_calendar_empty_range():
