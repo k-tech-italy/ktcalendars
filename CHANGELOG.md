@@ -2,6 +2,12 @@
 
 Notable changes to ktcalendars, newest first.
 
+## 3.3.1 (2026-08-19)
+
+### Fix
+
+- **DateRange.as_dates**: Fixes wrong return of the method: now returns a tuple[datetime.date, datetime.date]
+
 ## 3.3.0 (2026-08-18)
 
 ### Feat
