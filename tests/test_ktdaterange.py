@@ -440,6 +440,53 @@ def test_none_not_in_range():
 
 
 @pytest.mark.parametrize(
+    'ranges, result',
+    [
+        pytest.param(
+            [('2026-01-10', '2026-01-19'), ('2026-02-01', '2026-02-10')],
+            [('2026-01-01', '2026-01-10'), ('2026-01-20', '2026-02-01'), ('2026-02-11', '2026-03-01')],
+            id='leading-middle-trailing',
+        ),
+        pytest.param([('2025-12-01', '2026-12-31')], [], id='fully-covered'),
+        pytest.param([], [('2026-01-01', '2026-03-01')], id='no-ranges'),
+        pytest.param([('2026-01-15', None)], [('2026-01-01', '2026-01-15')], id='unbounded-upper'),
+        pytest.param([(None, '2026-01-15')], [('2026-01-16', '2026-03-01')], id='unbounded-lower'),
+        pytest.param(
+            [('2026-01-01', '2026-01-31'), ('2026-02-01', '2026-02-28')],
+            [],
+            id='adjacent-no-false-gap',
+        ),
+        pytest.param(
+            [('2025-12-15', '2026-01-05'), ('2026-02-20', '2026-03-15')],
+            [('2026-01-06', '2026-02-20')],
+            id='clipped-to-window',
+        ),
+        pytest.param(
+            [('2026-02-01', '2026-02-10'), ('2026-01-10', '2026-01-19')],
+            [('2026-01-01', '2026-01-10'), ('2026-01-20', '2026-02-01'), ('2026-02-11', '2026-03-01')],
+            id='unsorted-input',
+        ),
+        pytest.param(['2026-01-15'], [('2026-01-01', '2026-01-15'), ('2026-01-16', '2026-03-01')], id='single-day'),
+    ],
+)
+def test_gaps(ranges, result):
+    ranges = [KTDateRange.from_start_end(*r) if isinstance(r, tuple) else r for r in ranges]
+    gaps = KTDateRange.gaps(ranges, '2026-01-01', '2026-02-28')
+    assert [g.boundaries for g in gaps] == [(dt(lo), dt(hi)) for lo, hi in result]
+
+
+def test_gaps_empty_ranges_ignored():
+    gaps = KTDateRange.gaps([KTDateRange(empty=True)], '2026-01-01', '2026-01-31')
+    assert [g.boundaries for g in gaps] == [(dt('2026-01-01'), dt('2026-02-01'))]
+
+
+def test_gaps_calendar_binds_results():
+    cal = KTCalendar(country_code='IT')
+    (gap,) = KTDateRange.gaps([], '2026-01-01', '2026-01-31', ktcalendar=cal)
+    assert gap.ktcalendar is cal
+
+
+@pytest.mark.parametrize(
     'period, boundaries',
     [
         pytest.param(('2026-01-01', '2026-01-10'), (dt('2026-01-01'), dt('2026-01-10')), id='bounded'),

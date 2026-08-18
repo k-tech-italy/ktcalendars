@@ -12,7 +12,7 @@ from ktcalendars.days import KTDay
 
 
 if typing.TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Iterable, Iterator
 
     from ktcalendars.types import KTDayType
 
@@ -110,6 +110,31 @@ class KTDateRange(DateRange):
         """Build a KTDateRange from a start and end date (included)."""
         extra: dict[str, typing.Any] = dict(kwargs)
         return KTDateRange(lower=start_date, upper=end_date, bounds='[]', ktcalendar=ktcalendar, **extra)
+
+    @staticmethod
+    def gaps(
+        ranges: Iterable[Range[datetime.date] | KTDayType],
+        start_date: KTDayType,
+        end_date: KTDayType,
+        ktcalendar: KTCalendar | None = None,
+    ) -> list[KTDateRange]:
+        """Return the sub-ranges of [start_date, end_date] (both included) not covered by `ranges`.
+
+        `ranges` must be non-overlapping; a single day is treated as the one-day range covering it.
+        Gaps are returned as canonical [) ranges, sorted ascending, bound to the given (or a new)
+        KTCalendar.
+        """
+        window = KTDateRange.from_start_end(start_date, end_date, ktcalendar=ktcalendar)
+        cursor = typing.cast('datetime.date', window.lower)
+        result: list[KTDateRange] = []
+        for r in sorted((r for r in map(window._as_range, ranges) if r.overlap(window)), key=_lo):
+            if _lo(r) > cursor:
+                result.append(KTDateRange(cursor, _lo(r), ktcalendar=window.ktcalendar))
+            cursor = max(cursor, _hi(r))
+            if cursor >= typing.cast('datetime.date', window.upper):
+                return result
+        result.append(KTDateRange(cursor, window.upper, ktcalendar=window.ktcalendar))
+        return result
 
     def _as_range(
         self,
