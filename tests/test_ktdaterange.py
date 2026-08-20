@@ -72,8 +72,7 @@ def test_iterate(period, expectation, result):
             id='min-max',
         ),
         pytest.param(('2026-02-03', '2026-02-01'), param_order, None, False, id='order'),
-        pytest.param(('2026-02-01', '2026-02-01'), ok, (None, None), True, id='equal-bounds-empty'),
-        pytest.param((('2026-01-01', '2026-01-31'),), ok, (dt('2026-01-01'), dt('2026-01-31')), False, id='tuple'),
+        pytest.param(('2026-02-01', '2026-02-01'), ok, (dt('2026-02-01'), dt('2026-02-01')), False, id='equal-bounds'),
     ],
 )
 def test_instance_creation(period, expectation, bounds, isempty):
@@ -263,7 +262,8 @@ def test_adjacent_to(period, other, result):
         pytest.param(('2026-02-01', None), '[2026-02-01:...)', id='none-end'),
         pytest.param((datetime.date.min, '2026-02-28'), '(...:2026-02-28)', id='inf-start'),
         pytest.param(('2026-02-01', datetime.date.max), '[2026-02-01:...)', id='inf-end'),
-        pytest.param(('2026-02-01', '2026-02-01'), 'empty', id='empty'),
+        pytest.param(('2026-02-01', '2026-02-01'), '[2026-02-01:2026-02-01)', id='equal-bounds'),
+        pytest.param(('2026-02-01', '2026-02-28', '[]'), '[2026-02-01:2026-03-01)', id='incl-upper-normalised'),
     ],
 )
 def test_str(period, result):
@@ -271,25 +271,30 @@ def test_str(period, result):
     assert res == result, f'Expected {result}, got {res}'
 
 
+def test_str_empty():
+    assert str(KTDateRange(empty=True)) == 'empty'
+
+
 @pytest.mark.parametrize(
-    'period, bounds, canonical, isempty',
+    'period, bounds, inc_flags, days',
     [
-        pytest.param(('2026-01-01', '2026-01-10'), '[]', (dt('2026-01-01'), dt('2026-01-11')), False, id='incl-upper'),
-        pytest.param(('2026-01-01', '2026-01-10'), '()', (dt('2026-01-02'), dt('2026-01-10')), False, id='excl-lower'),
-        pytest.param(('2026-01-01', '2026-01-10'), '(]', (dt('2026-01-02'), dt('2026-01-11')), False, id='excl-incl'),
-        pytest.param(('2026-01-01', '2026-01-01'), '[]', (dt('2026-01-01'), dt('2026-01-02')), False, id='one-day'),
-        pytest.param(('2026-01-01', '2026-01-01'), '()', (None, None), True, id='excl-equal-empty'),
-        pytest.param(('2026-01-01', '2026-01-02'), '()', (None, None), True, id='excl-adjacent-empty'),
-        pytest.param((None, '2026-01-10'), '(]', (None, dt('2026-01-11')), False, id='unbounded-lower'),
+        pytest.param(('2026-01-01', '2026-01-10'), '[]', (True, True), 10, id='incl-upper'),
+        pytest.param(('2026-01-01', '2026-01-10'), '()', (False, False), 8, id='excl-lower'),
+        pytest.param(('2026-01-01', '2026-01-10'), '(]', (False, True), 9, id='excl-incl'),
+        pytest.param(('2026-01-01', '2026-01-01'), '[]', (True, True), 1, id='one-day'),
+        pytest.param(('2026-01-01', '2026-01-01'), '()', (False, False), 0, id='excl-equal-no-days'),
+        pytest.param(('2026-01-01', '2026-01-02'), '()', (False, False), 0, id='excl-adjacent-no-days'),
+        pytest.param((None, '2026-01-10'), '(]', (False, True), None, id='unbounded-lower'),
     ],
 )
-def test_canonicalisation(period, bounds, canonical, isempty):
-    """Any bound inclusivity is normalised to [) like PostgreSQL does for discrete ranges."""
+def test_bounds_preserved(period, bounds, inc_flags, days):
+    """Bounds are stored as given (no canonicalisation); iteration still respects inclusivity."""
     dr = KTDateRange(period[0], period[1], bounds=bounds)
-    assert dr.boundaries == canonical
-    assert dr.isempty is isempty
-    assert not dr.upper_inc
-    assert dr.lower_inc is (dr.lower is not None)
+    assert dr.boundaries == tuple(dt(d) if d else None for d in period)
+    assert not dr.isempty
+    assert (dr.lower_inc, dr.upper_inc) == inc_flags
+    if days is not None:
+        assert len(list(dr)) == days
 
 
 def test_invalid_bounds():
@@ -298,11 +303,11 @@ def test_invalid_bounds():
 
 
 @pytest.mark.parametrize(
-    'source, canonical, isempty',
+    'source, boundaries, isempty',
     [
         pytest.param(
             DateRange(dt('2026-01-01'), dt('2026-01-10'), '[]'),
-            (dt('2026-01-01'), dt('2026-01-11')),
+            (dt('2026-01-01'), dt('2026-01-10')),
             False,
             id='daterange-incl',
         ),
@@ -315,18 +320,131 @@ def test_invalid_bounds():
         ),
     ],
 )
-def test_copy_constructor(source, canonical, isempty):
+def test_copy_constructor(source, boundaries, isempty):
+    """Copies preserve the source's bounds and inclusivity as-is."""
     dr = KTDateRange(source)
-    assert dr.boundaries == canonical
+    assert dr.boundaries == boundaries
     assert dr.isempty is isempty
+    assert (dr.lower_inc, dr.upper_inc) == (source.lower_inc, source.upper_inc)
 
 
-def test_from_start_end():
-    dr = KTDateRange.from_start_end('2026-01-01', '2026-01-03')
-    assert dr.boundaries == (dt('2026-01-01'), dt('2026-01-04'))
-    assert list(dr) == ['2026-01-01', '2026-01-02', '2026-01-03']
-    assert '2026-01-03' in dr
-    assert '2026-01-04' not in dr
+@pytest.mark.parametrize(
+    'rng, expected, as_dates',
+    [
+        pytest.param(
+            ('2026-01-01', '2026-01-03'),
+            {
+                'lower_inc': True,
+                'upper_inc': True,
+                'lower_inf': False,
+                'upper_inf': False,
+                'lower': dt('2026-01-01'),
+                'upper': dt('2026-01-03'),
+            },
+            (dt('2026-01-01'), dt('2026-01-03')),
+            id="simple",
+        ),
+        pytest.param(
+            (None, dt('2026-01-03')),
+            {
+                'lower_inc': False,
+                'upper_inc': True,
+                'lower_inf': True,
+                'upper_inf': False,
+                'lower': None,
+                'upper': dt('2026-01-03'),
+            },
+            (datetime.date.min, dt('2026-01-03')),
+            id="lower-inf",
+        ),
+        pytest.param(
+            (dt('2026-01-01'), None),
+            {
+                'lower_inc': True,
+                'upper_inc': False,
+                'lower_inf': False,
+                'upper_inf': True,
+                'lower': dt('2026-01-01'),
+                'upper': None,
+            },
+            (dt('2026-01-01'), datetime.date.max),
+            id="upper-inf",
+        ),
+        pytest.param(
+            (None, None),
+            {
+                'lower_inc': False,
+                'upper_inc': False,
+                'lower_inf': True,
+                'upper_inf': True,
+                'lower': None,
+                'upper': None,
+            },
+            (datetime.date.min, datetime.date.max),
+            id="both-inf",
+        ),
+        pytest.param(
+            (datetime.date.min, '2026-01-03'),
+            {
+                'lower_inc': True,
+                'upper_inc': True,
+                'lower_inf': False,
+                'upper_inf': False,
+                'lower': datetime.date.min,
+                'upper': dt('2026-01-03'),
+            },
+            (datetime.date.min, dt('2026-01-03')),
+            id="lower-min",
+        ),
+        pytest.param(
+            ('2026-01-01', datetime.date.max),
+            {
+                'lower_inc': True,
+                'upper_inc': True,
+                'lower_inf': False,
+                'upper_inf': False,
+                'lower': dt('2026-01-01'),
+                'upper': datetime.date.max,
+            },
+            (dt('2026-01-01'), datetime.date.max),
+            id="upper-max",
+        ),
+        pytest.param(
+            ('2026-01-01', '2026-01-01'),
+            {
+                'lower_inc': True,
+                'upper_inc': True,
+                'lower_inf': False,
+                'upper_inf': False,
+                'lower': dt('2026-01-01'),
+                'upper': dt('2026-01-01'),
+            },
+            (dt('2026-01-01'), dt('2026-01-01')),
+            id="same-day",
+        ),
+        pytest.param(
+            (KTDay('2026-01-01'), dt('2026-01-03')),
+            {
+                'lower_inc': True,
+                'upper_inc': True,
+                'lower_inf': False,
+                'upper_inf': False,
+                'lower': dt('2026-01-01'),
+                'upper': dt('2026-01-03'),
+            },
+            (dt('2026-01-01'), dt('2026-01-03')),
+            id="ktday-mixed",
+        ),
+    ],
+)
+def test_from_start_end(
+    rng: tuple[KTDayType, KTDayType], expected: dict[str, typing.Any], as_dates: tuple[datetime.date, datetime.date]
+):
+    dr = KTDateRange.from_start_end(*rng)
+    assert {
+        k: getattr(dr, k) for k in ["lower_inc", "upper_inc", "lower_inf", "upper_inf", "lower", "upper"]
+    } == expected
+    assert dr.as_dates() == as_dates
 
 
 def test_from_start_end_one_day():
@@ -544,9 +662,9 @@ def test_calendar_empty_range():
     assert dr.ktcalendar.country_calendar_code == 'IT'
 
 
-def test_extra_kwargs_become_attributes():
+def test_extra_kwargs_ignored():
     dr = KTDateRange('2025-06-01', '2025-06-04', name='sprint-1')
-    assert dr.name == 'sprint-1'
+    assert not hasattr(dr, 'name')
 
 
 def test_equality_ignores_calendar_and_attributes():
@@ -555,12 +673,11 @@ def test_equality_ignores_calendar_and_attributes():
     )
 
 
-def test_pickle_preserves_calendar_and_attributes():
-    dr = KTDateRange('2025-06-01', '2025-06-04', cal_country_code='IT', name='sprint-1')
+def test_pickle_preserves_calendar():
+    dr = KTDateRange('2025-06-01', '2025-06-04', cal_country_code='IT')
     roundtripped = pickle.loads(pickle.dumps(dr))
     assert roundtripped == dr
     assert roundtripped.ktcalendar.country_calendar_code == 'IT'
-    assert roundtripped.name == 'sprint-1'
     assert list(roundtripped)[1].is_holiday is True, 'Should be Bank Hol in Italy'
 
 

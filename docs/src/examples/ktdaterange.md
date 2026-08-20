@@ -21,12 +21,11 @@ from ktcalendars.ranges import KTDateRange
 
 Bounds accept anything a `KTDay` accepts — a `KTDay`, a `datetime.date` or a
 date string — plus `None` for an unbounded side. A range can also be built
-from another `DateRange` or from a `(start, end)` tuple:
+as a copy of another `DateRange`:
 
 ```python
 KTDateRange("2025-06-01", "2025-06-04")        # 2025-06-01 to 2025-06-03
 KTDateRange(datetime.date(2025, 6, 1), KTDay("2025-06-04"))
-KTDateRange(("2025-06-01", "2025-06-04"))      # from a tuple
 KTDateRange(DateRange(datetime.date(2025, 6, 1), datetime.date(2025, 6, 4)))
 KTDateRange("2025-06-01", None)                # unbounded above
 KTDateRange()                                  # unbounded on both sides
@@ -55,12 +54,10 @@ Bounds accept exactly what a `KTDay` accepts and raise the same
 Like `KTDay`, a range is bound to a `KTCalendar`: pass one with
 `ktcalendar`, or let the range create its own — `cal_`-prefixed keyword
 arguments are forwarded to the `KTCalendar` constructor. Every `KTDay` the
-range produces keeps that calendar, and any remaining keyword arguments are
-set as instance attributes:
+range produces keeps that calendar:
 
 ```python
-r = KTDateRange("2025-06-01", "2025-06-04", cal_country_code="IT", name="sprint-1")
-r.name                                  # 'sprint-1'
+r = KTDateRange("2025-06-01", "2025-06-04", cal_country_code="IT")
 [day.is_holiday for day in r]           # [False, True, False] — 2025-06-02 is a holiday in IT
 
 KTDateRange(r).ktcalendar is r.ktcalendar          # True — copies inherit the calendar
@@ -68,23 +65,24 @@ r.intersection("2025-06-02").ktcalendar is r.ktcalendar  # True — derived rang
 ```
 
 The calendar does not affect equality: two ranges with the same bounds are
-equal regardless of their calendars or extra attributes.
+equal regardless of their calendars.
 
-## Canonical form
+## Bound inclusivity
 
-Like PostgreSQL, ranges are always stored in the canonical form for discrete
-types: lower bound included, upper bound excluded (`[)`). Bounds passed with
-a different inclusivity are shifted by one day, and a range that
-canonicalises to nothing becomes the *empty* range:
+Bounds are stored exactly as given — `[)` by default (lower included, upper
+excluded) — like psycopg's `Range`. Iteration, `str` and the comparison
+helpers normalise inclusivity internally, so a `[]` range behaves like the
+equivalent `[)` range ending one day later:
 
 ```python
-KTDateRange("2025-06-01", "2025-06-10", bounds="[]")
-# [2025-06-01:2025-06-11)
+r = KTDateRange("2025-06-01", "2025-06-10", bounds="[]")
+r.boundaries          # (datetime.date(2025, 6, 1), datetime.date(2025, 6, 10)) — as given
+r.upper_inc           # True
+"2025-06-10" in r     # True
+str(r)                # '[2025-06-01:2025-06-11)' — displayed in normalised [) form
 
-KTDateRange("2025-06-01", "2025-06-10", bounds="()")
-# [2025-06-02:2025-06-10)
-
-KTDateRange("2025-06-01", "2025-06-01").isempty  # True — [) with equal bounds
+list(KTDateRange("2025-06-01", "2025-06-01"))    # [] — equal bounds with [) cover no days
+KTDateRange("2025-06-01", "2025-06-01").isempty  # False — only KTDateRange(empty=True) is empty
 ```
 
 ## Membership and iteration
@@ -109,8 +107,9 @@ list(KTDateRange(empty=True))          # []
 
 ## Comparisons
 
-Every helper accepts another range (a `KTDateRange` or any `DateRange`) or a
-single day, treated as the one-day range covering it:
+Every helper accepts another range (a `KTDateRange`, any `DateRange` or a
+`(start, end)` tuple) or a single day, treated as the one-day range covering
+it:
 
 ```python
 a = KTDateRange("2025-06-01", "2025-06-10")
@@ -156,11 +155,15 @@ a.intersection("2025-06-05")  # [2025-06-05:2025-06-06)
 a.intersection(KTDateRange("2025-06-25", None))  # None — no overlap
 ```
 
-`as_dates` returns a copy with infinite boundaries replaced by
+`as_dates` returns the first and last day covered as a
+`(date, date)` tuple, with infinite boundaries replaced by
 `datetime.date.min` / `datetime.date.max`:
 
 ```python
-KTDateRange("2025-06-01", None).as_dates().upper  # datetime.date.max
+KTDateRange("2025-06-01", "2025-06-04").as_dates()
+# (datetime.date(2025, 6, 1), datetime.date(2025, 6, 3)) — last covered day
+
+KTDateRange("2025-06-01", None).as_dates()[1]  # datetime.date.max
 ```
 
 ## The empty range

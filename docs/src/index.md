@@ -9,7 +9,7 @@ It builds on the [holidays](https://pypi.org/project/holidays/) package and prov
 * **`KTDay`** — a rich day object with date parsing, arithmetic, comparisons and holiday/work-day checks; every day is bound to a `KTCalendar`, and derived days (arithmetic results, copies) keep it.
 * **`KTCalendar`** — a `calendar.Calendar` subclass bound to a country calendar, with configurable weekend days and work-day and week iteration helpers.
 * **`AbstractConfiguration`** — a pluggable configuration class, selected via the `KTCALENDAR_CONFIG` environment variable, centralising holiday overrides (e.g. company closures) and the default country calendar code.
-* **`KTDateRange`** — a calendar-aware [psycopg](https://pypi.org/project/psycopg/) `DateRange` subclass with PostgreSQL-canonical `[)` bounds, `KTDay` iteration and rich comparison, containment and intersection helpers (requires the `psycopg` extra).
+* **`KTDateRange`** — a calendar-aware [psycopg](https://pypi.org/project/psycopg/) `DateRange` subclass with inclusivity-aware `KTDay` iteration and rich comparison, containment and intersection helpers (requires the `psycopg` extra).
 
 Head over to [Getting started](usage.md) for configuration and usage, or browse the [examples](examples/ktday.md).
 

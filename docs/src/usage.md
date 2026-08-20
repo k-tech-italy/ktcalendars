@@ -188,8 +188,8 @@ list(cal.days_in_months(2025, 6))  # complete weeks, None outside the month
 and requires the `psycopg` extra (`pip install ktcalendars[psycopg]`). The
 bounds accept anything a `KTDay` accepts (a `KTDay`, a `datetime.date` or a
 date string) — with one deviation: `None` means an *unbounded* bound, not
-"today" as in `KTDay(None)`. A range can also be built from another
-`DateRange` or from a `(start, end)` tuple.
+"today" as in `KTDay(None)`. A range can also be built as a copy of another
+`DateRange`.
 
 Like `KTDay`, a range is bound to a `KTCalendar` — pass `ktcalendar` or
 `cal_`-prefixed keyword arguments exactly as for a
@@ -203,18 +203,18 @@ r = KTDateRange("2025-06-01", "2025-06-04", cal_country_code="IT")
 [day.is_holiday for day in r]  # [False, True, False] — 2025-06-02 is a holiday in IT
 ```
 
-Like PostgreSQL, ranges are always stored in the canonical form for discrete
-types — lower bound included, upper bound excluded (`[)`). Bounds passed with
-a different inclusivity are shifted by one day, and a range that
-canonicalises to nothing becomes the *empty* range:
+Bounds are stored exactly as given — `[)` by default (lower bound included,
+upper bound excluded) — like psycopg's `Range`. Iteration and the comparison
+helpers normalise inclusivity internally, so a `[]` range behaves like the
+equivalent `[)` range ending one day later:
 
 ```python
 from ktcalendars.ranges import KTDateRange
 
 KTDateRange("2025-06-01", "2025-06-04")                # 2025-06-01 to 2025-06-03
-KTDateRange.from_start_end("2025-06-01", "2025-06-03")  # same range, both bounds included
+KTDateRange.from_start_end("2025-06-01", "2025-06-03")  # covers the same days, both bounds included
 KTDateRange("2025-06-01", None)                        # unbounded above
-KTDateRange("2025-06-01", "2025-06-01").isempty        # True — [) with equal bounds
+list(KTDateRange("2025-06-01", "2025-06-01"))          # [] — equal bounds with [) cover no days
 
 r = KTDateRange("2025-06-01", "2025-06-04")
 "2025-06-03" in r          # True

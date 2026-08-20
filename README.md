@@ -24,8 +24,8 @@ provides:
   code.
 * **`KTDateRange`** — a calendar-aware
   [psycopg](https://pypi.org/project/psycopg/) `DateRange` subclass with
-  PostgreSQL-canonical `[)` bounds, `KTDay` iteration and rich comparison,
-  containment and intersection helpers (requires the `psycopg` extra).
+  inclusivity-aware `KTDay` iteration and rich comparison, containment and
+  intersection helpers (requires the `psycopg` extra).
 
 ```python
 from ktcalendars import KTCalendar
@@ -76,15 +76,16 @@ list(cal.month_weeks_days(2025, 6))  # complete weeks covering June 2025
 
 ### Date ranges
 
-`KTDateRange` (requires the `psycopg` extra) stores date ranges in the
-PostgreSQL canonical form — lower bound included, upper bound excluded:
+`KTDateRange` (requires the `psycopg` extra) stores bounds as given — `[)` by
+default (lower bound included, upper bound excluded) — and its helpers
+normalise inclusivity internally:
 
 ```python
 from ktcalendars.ranges import KTDateRange
 
 r = KTDateRange("2025-06-01", "2025-06-04")           # upper bound excluded
 list(r)                                               # [K2025-06-01, K2025-06-02, K2025-06-03]
-KTDateRange.from_start_end("2025-06-01", "2025-06-03")  # both bounds included, same range
+KTDateRange.from_start_end("2025-06-01", "2025-06-03")  # both bounds included, covers the same days
 
 "2025-06-03" in r                                     # True
 r.overlap(KTDateRange("2025-06-03", "2025-06-10"))    # True
