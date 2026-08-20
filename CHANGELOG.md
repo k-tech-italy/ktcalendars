@@ -2,6 +2,19 @@
 
 Notable changes to ktcalendars, newest first.
 
+## 4.0.0 (2026-08-20)
+
+### BREAKING CHANGE
+
+- equal bounds with [) no longer collapse to the empty
+range (they cover zero days but isempty is False); the constructor no
+longer accepts a (start, end) tuple (comparison helpers still do); extra
+keyword arguments are accepted but no longer set as instance attributes.
+
+### Feat
+
+- **ranges**: store bounds as given instead of canonicalising to [)
+
 ## 3.3.1 (2026-08-19)
 
 ### Fix
