@@ -26,6 +26,11 @@ dependencies = [
   "typing-extensions>=4.15",
 ]
 
+optional-dependencies.django = [
+  "django>=5.2.17",
+  "pytest-django>=4.14",
+]
+
 optional-dependencies.psycopg = [
   "psycopg>=2.9.1",
 ]

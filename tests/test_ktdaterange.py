@@ -17,6 +17,19 @@ psycopg = pytest.importorskip("psycopg", reason="psycopg not installed")
 from ktcalendars.ranges import KTDateRange  # noqa: E402
 
 
+@pytest.fixture
+def orm_db(request: pytest.FixtureRequest):
+    pytest.importorskip("django", reason="django not installed")
+    pytest.importorskip("pytest_django", reason="pytest-django not installed")
+
+
+@pytest.fixture
+def contract():
+    from testapp.models import Contract  # noqa: PLC0415
+
+    return Contract.objects.create(period=KTDateRange('2026-01-01', '2026-02-01'))
+
+
 def test_ktdaytype_alias():
     assert typing.get_args(KTDayType) == (KTDay, datetime.date, str)
 
@@ -716,3 +729,41 @@ def test_other_types(other):
     assert KTDateRange('2026-01-01', '2026-02-01').precedes(other) is True
     assert KTDateRange('2026-01-01', '2026-01-20').fully_lt(other) is True
     assert KTDateRange('2026-01-01', '2026-02-05').fully_lt(other) is False
+
+
+@pytest.mark.django_db
+def test_django_create(orm_db, contract):
+    assert contract.period == psycopg.types.range.DateRange(dt('2026-01-01'), dt('2026-02-01'))
+
+
+@pytest.mark.parametrize(
+    'daterange, expected',
+    [
+        pytest.param(
+            (dt('2026-01-01'), dt('2026-01-10')),
+            1,
+            id='daterange-full',
+        ),
+        pytest.param(
+            (dt('2026-01-01'), None),
+            1,
+            id='daterange-start-only',
+        ),
+        pytest.param(
+            (None, dt('2026-01-15')),
+            1,
+            id='daterange-end-only',
+        ),
+        pytest.param(
+            (None, None),
+            1,
+            id='daterange-empty',
+        ),
+    ],
+)
+@pytest.mark.django_db
+def test_django_daterange_filter(orm_db, daterange, expected, contract):
+    from testapp.models import Contract  # noqa: PLC0415
+
+    contracts = Contract.objects.filter(period__overlap=KTDateRange.from_start_end(*daterange))
+    assert len(contracts) == expected
