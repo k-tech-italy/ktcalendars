@@ -16,4 +16,7 @@
 coverage.xml
 junit.xml
 
+junit-*.xml
+coverage*.xml
+
 src/ktcalendars/version.py

@@ -1,16 +1,20 @@
 import datetime
 import pickle
 import typing
-from contextlib import nullcontext as does_not_raise
+from contextlib import (
+    nullcontext as does_not_raise,
+)
 
 import pytest
-from psycopg.types.range import DateRange
 
 from ktcalendars.calendar import KTCalendar
 from ktcalendars.days import KTDay
-from ktcalendars.ranges import KTDateRange
 from ktcalendars.types import KTDayType
 from ktcalendars.utils import dt
+
+
+psycopg = pytest.importorskip("psycopg", reason="psycopg not installed")
+from ktcalendars.ranges import KTDateRange  # noqa: E402
 
 
 def test_ktdaytype_alias():
@@ -306,15 +310,20 @@ def test_invalid_bounds():
     'source, boundaries, isempty',
     [
         pytest.param(
-            DateRange(dt('2026-01-01'), dt('2026-01-10'), '[]'),
+            psycopg.types.range.DateRange(dt('2026-01-01'), dt('2026-01-10'), '[]'),
             (dt('2026-01-01'), dt('2026-01-10')),
             False,
-            id='daterange-incl',
+            id='psycopg.types.range.DateRange-incl',
         ),
         pytest.param(
-            DateRange(dt('2026-01-01'), dt('2026-01-10')), (dt('2026-01-01'), dt('2026-01-10')), False, id='daterange'
+            psycopg.types.range.DateRange(dt('2026-01-01'), dt('2026-01-10')),
+            (dt('2026-01-01'), dt('2026-01-10')),
+            False,
+            id='psycopg.types.range.DateRange',
         ),
-        pytest.param(DateRange(empty=True), (None, None), True, id='daterange-empty'),
+        pytest.param(
+            psycopg.types.range.DateRange(empty=True), (None, None), True, id='psycopg.types.range.DateRange-empty'
+        ),
         pytest.param(
             KTDateRange('2026-01-01', '2026-01-10'), (dt('2026-01-01'), dt('2026-01-10')), False, id='ktdaterange'
         ),
@@ -696,7 +705,9 @@ def test_parsing_consistency_with_ktday():
         pytest.param('2026-02-01', id='str'),
         pytest.param(dt('2026-02-01'), id='date'),
         pytest.param(KTDay('2026-02-01'), id='ktday'),
-        pytest.param(DateRange(dt('2026-02-01'), dt('2026-02-10')), id='daterange'),
+        pytest.param(
+            psycopg.types.range.DateRange(dt('2026-02-01'), dt('2026-02-10')), id='psycopg.types.range.DateRange'
+        ),
         pytest.param(('2026-02-01', '2026-02-10'), id='tuple'),
     ],
 )
