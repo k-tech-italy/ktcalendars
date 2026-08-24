@@ -20,7 +20,7 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        python-version: [ '3.13', '3.12', '3.11', '3.10' ]
+        python-version: ['3.14', '3.13', '3.12', '3.11', '3.10' ]
       fail-fast: true
     steps:
       - name: Checkout code
@@ -63,19 +63,25 @@ jobs:
             ./uv-cache
             ./.venv
           key: ${{ steps.cache-venv-restore.outputs.cache-primary-key }}
-
+#
+#      - name: Test
+#        run: |
+#          uv run --cache-dir ./uv-cache \
+#              pytest tests \
+#                --junit-xml junit-${{ matrix.python-version }}.xml \
+#                --cov --cov-report xml
       - name: Test
+        env:
+          UV_CACHE_DIR: ./uv-cache
         run: |
           uv run --cache-dir ./uv-cache \
-              pytest tests \
-                --junit-xml junit-${{ matrix.python-version }}.xml \
-                --cov --cov-report xml
+          tox run -e py${{ matrix.python-version | replace('.', '') }},py${{ matrix.python-version | replace('.', '') }}-pg
 
       - name: Upload pytest test results
         uses: actions/upload-artifact@v4
         with:
           name: pytest-results-${{ matrix.python-version }}
-          path: junit-${{ matrix.python-version }}.xml
+          path: junit.xml
         if: ${{ always() }}
 
       - name: Upload coverage to Codecov

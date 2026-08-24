@@ -28,6 +28,7 @@ dependencies = [
 
 optional-dependencies.postgres = [
   "psycopg>=2.9.1",
+  "psycopg[binary]>=3.2",
 ]
 
 [dependency-groups]
@@ -39,6 +40,7 @@ dev = [
   "pytest-cov>=5",
   "pytest-randomly>=3.16",
   "tox>=4.25",
+  "tox-uv>=1.28.1",
   "types-setuptools",
 ]
 
