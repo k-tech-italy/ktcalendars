@@ -26,7 +26,7 @@ dependencies = [
   "typing-extensions>=4.15",
 ]
 
-optional-dependencies.postgres = [
+optional-dependencies.psycopg = [
   "psycopg>=2.9.1",
 ]
 

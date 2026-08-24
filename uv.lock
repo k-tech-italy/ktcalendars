@@ -583,7 +583,7 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
-postgres = [
+psycopg = [
     { name = "psycopg" },
 ]
 
@@ -626,11 +626,11 @@ documentation = [
 [package.metadata]
 requires-dist = [
     { name = "holidays" },
-    { name = "psycopg", marker = "extra == 'postgres'", specifier = ">=2.9.1" },
+    { name = "psycopg", marker = "extra == 'psycopg'", specifier = ">=2.9.1" },
     { name = "pytest-xdist", specifier = ">=3.8" },
     { name = "typing-extensions", specifier = ">=4.15" },
 ]
-provides-extras = ["postgres"]
+provides-extras = ["psycopg"]
 
 [package.metadata.requires-dev]
 checks = [
