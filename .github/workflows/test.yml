@@ -21,11 +21,16 @@ jobs:
       max-parallel: 1
       matrix:
         include:
-          - { python-version: '3.14', tox-env: py314 }
-          - { python-version: '3.13', tox-env: py313 }
-          - { python-version: '3.12', tox-env: py312 }
-          - { python-version: '3.11', tox-env: py311 }
-          - { python-version: '3.10', tox-env: py310 }
+          - python-version: '3.14'
+            tox-envs: py314,py314-pg,py314-d52-pg,py314-d61-pg
+          - python-version: '3.13'
+            tox-envs: py313,py313-pg,py313-d52-pg,py313-d61-pg
+          - python-version: '3.12'
+            tox-envs: py312,py312-pg,py312-d52-pg,py312-d61-pg
+          - python-version: '3.11'
+            tox-envs: py311,py311-pg,py311-d52-pg
+          - python-version: '3.10'
+            tox-envs: py310,py310-pg,py310-d52-pg
       fail-fast: true
     steps:
       - name: Checkout code
@@ -74,7 +79,7 @@ jobs:
           UV_CACHE_DIR: ./uv-cache
         run: |
           uv run --cache-dir ./uv-cache \
-          tox run -e ${{ matrix.tox-env }},${{ matrix.tox-env }}-pg
+          tox run -e ${{ matrix.tox-envs }}
 
       - name: Upload pytest test results
         uses: actions/upload-artifact@v4
