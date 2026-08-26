@@ -731,39 +731,84 @@ def test_other_types(other):
     assert KTDateRange('2026-01-01', '2026-02-05').fully_lt(other) is False
 
 
-@pytest.mark.django_db
-def test_django_create(orm_db, contract):
-    assert contract.period == psycopg.types.range.DateRange(dt('2026-01-01'), dt('2026-02-01'))
-
-
 @pytest.mark.parametrize(
-    'daterange, expected',
+    'query_period, expected',
     [
         pytest.param(
-            (dt('2026-01-01'), dt('2026-01-10')),
+            KTDateRange('2026-01-01', '2026-01-10'),
             1,
-            id='daterange-full',
+            id='query-bounded-overlap',
         ),
         pytest.param(
-            (dt('2026-01-01'), None),
+            KTDateRange('2026-01-01', None),
             1,
-            id='daterange-start-only',
+            id='query-upper-unbounded-overlap',
         ),
         pytest.param(
-            (None, dt('2026-01-15')),
+            KTDateRange(None, '2026-01-15'),
             1,
-            id='daterange-end-only',
+            id='query-lower-unbounded-overlap',
         ),
         pytest.param(
-            (None, None),
+            KTDateRange(None, None),
             1,
-            id='daterange-empty',
+            id='query-fully-unbounded-overlap',
+        ),
+        pytest.param(
+            KTDateRange(KTDay('2026-01-01'), KTDay('2026-01-10')),
+            1,
+            id='query-ktday-bounded-overlap',
+        ),
+        pytest.param(
+            KTDateRange(dt('2026-01-01'), dt('2026-01-10')),
+            1,
+            id='query-date-bounded-overlap',
+        ),
+        pytest.param(
+            KTDateRange.from_start_end('2026-01-01', None),
+            1,
+            id='query-inclusive-upper-unbounded-string',
+        ),
+        pytest.param(
+            KTDateRange.from_start_end(dt('2026-01-01'), None),
+            1,
+            id='query-inclusive-upper-unbounded-date',
+        ),
+        pytest.param(
+            KTDateRange.from_start_end(KTDay('2026-01-01'), None),
+            1,
+            id='query-inclusive-upper-unbounded-ktday',
+        ),
+        pytest.param(
+            KTDateRange.from_start_end(None, None),
+            1,
+            id='query-inclusive-unbounded',
+        ),
+        pytest.param(
+            KTDateRange(empty=True),
+            0,
+            id='query-empty',
+        ),
+        pytest.param(
+            KTDateRange('2025-12-01', '2026-01-01'),
+            0,
+            id='query-adjacent-before-no-overlap',
+        ),
+        pytest.param(
+            KTDateRange('2026-02-01', '2026-03-01'),
+            0,
+            id='query-adjacent-after-no-overlap',
+        ),
+        pytest.param(
+            KTDateRange.from_start_end('2025-12-01', '2026-01-01'),
+            1,
+            id='query-inclusive-upper-touches-lower-overlap',
         ),
     ],
 )
 @pytest.mark.django_db
-def test_django_daterange_filter(orm_db, daterange, expected, contract):
+def test_django_daterange_filter(orm_db, query_period, expected, contract):
     from testapp.models import Contract  # noqa: PLC0415
 
-    contracts = Contract.objects.filter(period__overlap=KTDateRange.from_start_end(*daterange))
+    contracts = Contract.objects.filter(period__overlap=query_period)
     assert len(contracts) == expected

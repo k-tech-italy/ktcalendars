@@ -3,7 +3,7 @@ name: Test
 on:
   push:
     branches:
-      - '**'
+      - "**"
 
 concurrency:
   group: "${{ github.workflow }}-${{ github.ref }}-test"
@@ -22,13 +22,13 @@ jobs:
         env:
           POSTGRES_DB: ktcalendars-test
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_PASSWORD: postgres #pragma: allowlist secret
         ports:
           - 5432:5432
     env:
       PGDATABASE: ktcalendars-test
       PGHOST: localhost
-      PGPASSWORD: postgres
+      PGPASSWORD: postgres #pragma: allowlist secret
       PGPORT: 5432
       PGUSER: postgres
     name: Test py${{ matrix.python-version }}
@@ -36,15 +36,15 @@ jobs:
       max-parallel: 1
       matrix:
         include:
-          - python-version: '3.14'
+          - python-version: "3.14"
             tox-envs: py314,py314-pg,py314-d52-pg,py314-d61-pg
-          - python-version: '3.13'
+          - python-version: "3.13"
             tox-envs: py313,py313-pg,py313-d52-pg,py313-d61-pg
-          - python-version: '3.12'
+          - python-version: "3.12"
             tox-envs: py312,py312-pg,py312-d52-pg,py312-d61-pg
-          - python-version: '3.11'
+          - python-version: "3.11"
             tox-envs: py311,py311-pg,py311-d52-pg
-          - python-version: '3.10'
+          - python-version: "3.10"
             tox-envs: py310,py310-pg,py310-d52-pg
       fail-fast: true
     steps:
@@ -57,7 +57,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          architecture: 'x64'
+          architecture: "x64"
 
       - name: Install uv
         uses: astral-sh/setup-uv@v6

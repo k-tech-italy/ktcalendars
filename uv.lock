@@ -633,11 +633,6 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
-django = [
-    { name = "django", version = "5.2.17", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "django", version = "6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
-    { name = "pytest-django" },
-]
 psycopg = [
     { name = "psycopg" },
 ]
@@ -647,6 +642,11 @@ checks = [
     { name = "detect-secrets" },
     { name = "mypy" },
     { name = "ruff" },
+]
+demo = [
+    { name = "django", version = "5.2.17", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "django", version = "6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "pytest-django" },
 ]
 dev = [
     { name = "diff-cover" },
@@ -680,20 +680,22 @@ documentation = [
 
 [package.metadata]
 requires-dist = [
-    { name = "django", marker = "extra == 'django'", specifier = ">=5.2.17" },
     { name = "holidays" },
     { name = "psycopg", marker = "extra == 'psycopg'", specifier = ">=2.9.1" },
-    { name = "pytest-django", marker = "extra == 'django'", specifier = ">=4.14" },
     { name = "pytest-xdist", specifier = ">=3.8" },
     { name = "typing-extensions", specifier = ">=4.15" },
 ]
-provides-extras = ["django", "psycopg"]
+provides-extras = ["psycopg"]
 
 [package.metadata.requires-dev]
 checks = [
     { name = "detect-secrets", specifier = ">=1.5" },
     { name = "mypy", specifier = ">=1.17.1" },
     { name = "ruff", specifier = ">=0.12.12" },
+]
+demo = [
+    { name = "django", specifier = ">=5.2.17" },
+    { name = "pytest-django", specifier = ">=4.14.0" },
 ]
 dev = [
     { name = "diff-cover", specifier = ">=10.5" },
