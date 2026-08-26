@@ -16,6 +16,21 @@ defaults:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: ktcalendars-test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+    env:
+      PGDATABASE: ktcalendars-test
+      PGHOST: localhost
+      PGPASSWORD: postgres
+      PGPORT: 5432
+      PGUSER: postgres
     name: Test py${{ matrix.python-version }}
     strategy:
       max-parallel: 1
