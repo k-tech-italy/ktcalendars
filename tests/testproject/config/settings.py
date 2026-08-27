@@ -73,15 +73,14 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 
-db = os.environ.get('DB_VENDOR')
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': os.environ.get('PGDATABASE', 'ktcalendars-test'),
-        'HOST': os.environ.get('PGHOSTADDR', os.environ.get('PGHOST')),
+        'HOST': os.environ.get('PGHOST'),
         'PORT': os.environ.get('PGPORT'),
         'USER': os.environ.get('PGUSER'),
-        'PASSWORD': os.environ.get('PGPASSWORD', os.environ.get('PGPASS')),
+        'PASSWORD': os.environ.get('PGPASSWORD'),
     },
 }
 

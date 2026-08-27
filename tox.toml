@@ -23,10 +23,7 @@ extras = [
     { replace = "if", condition = "factor.pg", then = ["psycopg"], extend = true },
 ]
 pass_env = [
-    "PGDATABASE",
     "PGHOST",
-    "PGHOSTADDR",
-    "PGPASS",
     "PGPASSWORD",
     "PGPORT",
     "PGUSER",
