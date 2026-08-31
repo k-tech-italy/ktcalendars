@@ -2,6 +2,13 @@
 
 Notable changes to ktcalendars, newest first.
 
+## 4.0.1 (2026-08-31)
+
+### Fix
+
+- **tox**: removed mysql and sqlite environments from tox config
+- **tox**: per-database test environments with per-env coverage excludes
+
 ## 4.0.0 (2026-08-20)
 
 ### BREAKING CHANGE
