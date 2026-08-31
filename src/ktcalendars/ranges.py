@@ -91,7 +91,7 @@ class KTDateRange(DateRange):
 
     @staticmethod
     def from_start_end(
-        start_date: KTDayType, end_date: KTDayType, ktcalendar: KTCalendar | None = None, **kwargs: object
+        start_date: KTDayType | None, end_date: KTDayType | None, ktcalendar: KTCalendar | None = None, **kwargs: object
     ) -> KTDateRange:
         """Build a KTDateRange from a start and end date (included)."""
         extra: dict[str, typing.Any] = dict(kwargs)

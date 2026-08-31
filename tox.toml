@@ -1,0 +1,46 @@
+requires = ["tox>=4.60.1", "tox-uv>=1.28.1"]
+skip_missing_interpreters = true
+env_list = [
+    "lint",
+    { product = [["py311", "py310"], ["d52"], ["pg"]] },
+    { product = [["py314", "py313", "py312"], ["d61", "d52"], ["pg"]] },
+    { product = [["py314", "py313", "py312", "py311", "py310"], ["pg"]] },
+    "py314",
+    "py313",
+    "py312",
+    "py311",
+    "py310",
+]
+
+[env_run_base]
+deps = [
+    { replace = "if", condition = "factor.d52 or factor.d61", then = ["pytest-django>=4.14"], extend = true },
+    { replace = "if", condition = "factor.d52", then = ["django==5.2"], extend = true },
+    { replace = "if", condition = "factor.d61", then = ["django==6.1"], extend = true },
+    { replace = "if", condition = "factor.pg", then = ["psycopg-binary>=2.9.1"], extend = true },
+]
+extras = [
+    { replace = "if", condition = "factor.pg", then = ["psycopg"], extend = true },
+]
+pass_env = [
+    "PGHOST",
+    "PGPASSWORD",
+    "PGPORT",
+    "PGUSER",
+]
+set_env.COVERAGE_OMIT = { replace = "if", condition = "factor.pg", then = "", else = "src/ktcalendars/ranges.py" }
+commands_pre = [
+    ["python", "-c", "from pathlib import Path; Path('~build/test-results').mkdir(parents=True, exist_ok=True); Path('~build/coverage').mkdir(parents=True, exist_ok=True)"],
+]
+commands = [
+    ["pytest", "-x", { replace = "posargs", default = ["tests", "--junit-xml=~build/test-results/junit-{env_name}.xml", "--cov-report", "xml:~build/test-results/coverage-{env_name}.xml", "--cov-report", "html:~build/coverage/{env_name}", "-o", "junit_family=legacy"], extend = true }],
+    ["diff-cover", "~build/test-results/coverage-{env_name}.xml", "--compare-branch=origin/develop", "--fail-under=100", "--exclude", "version.py"],
+]
+dependency_groups = ["dev"]
+
+[env.lint]
+description = "run static analysis and style check using ruff"
+skip_install = true
+deps = ["pre-commit-uv>=4.1.1"]
+pass_env = ["HOMEPATH", "PROGRAMDATA"]
+commands = [["pre-commit", "run", "--all-files", "--show-diff-on-failure", { replace = "posargs", extend = true }]]
