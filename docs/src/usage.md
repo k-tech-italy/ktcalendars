@@ -86,9 +86,10 @@ cal.holidays.get("2025-06-02")  # 'Festa della Repubblica'
 To add holidays that are not part of the official country calendar
 (e.g. company closures), implement `get_holiday_overrides` in your
 configuration class. It returns a mapping of date → holiday name that is
-merged on top of the holidays provided by the
+added to the holidays provided by the
 [holidays](https://pypi.org/project/holidays/) package, optionally
-restricted to an inclusive date range:
+restricted to an inclusive date range (`from_date` and `to_date` are each
+optional):
 
 ```python
 # mypackage/config.py
@@ -115,6 +116,84 @@ class CompanyConfiguration(AbstractConfiguration):
             if (from_date is None or day >= from_date) and (to_date is None or day <= to_date)
         }
 ```
+
+The example above ignores `country_calendar_code`, so the closures apply
+to every calendar, whatever its country.
+
+#### Extra dates per country or subdivision
+
+`get_holiday_overrides` receives the *country calendar code* of the
+calendar being checked, exactly as given to `KTCalendar` (e.g. `IT`,
+`IT-MI`, `GB-SCT`; see [Country calendar codes](#country-calendar-codes)).
+ktcalendars does not filter overrides by country or subdivision: your
+implementation decides which dates apply to which code.
+
+For example, to have dates that apply to a whole country (and all its
+subdivisions) plus dates that apply only to one subdivision, key them by
+code and merge the country entries with the subdivision ones:
+
+```python
+# mypackage/config.py
+import datetime
+
+from ktcalendars import AbstractConfiguration
+
+
+class CompanyConfiguration(AbstractConfiguration):
+    # A country code applies to the whole country, including its subdivisions;
+    # a "country-subdivision" code applies only to that subdivision.
+    extra_dates = {
+        "IT": {datetime.date(2025, 12, 24): "Christmas Eve closure"},
+        "IT-MI": {datetime.date(2025, 12, 9): "Milan office closure"},
+        "GB-SCT": {datetime.date(2025, 1, 3): "Edinburgh office closure"},
+    }
+
+    def get_holiday_overrides(
+        self,
+        country_calendar_code: str,
+        from_date: datetime.date | None = None,
+        to_date: datetime.date | None = None,
+    ) -> dict[datetime.date, str]:
+        country = country_calendar_code.partition("-")[0]
+        overrides = {
+            **self.extra_dates.get(country, {}),  # country-wide dates
+            **self.extra_dates.get(country_calendar_code, {}),  # subdivision-only dates
+        }
+        return {
+            day: name
+            for day, name in overrides.items()
+            if (from_date is None or day >= from_date) and (to_date is None or day <= to_date)
+        }
+```
+
+```python
+from ktcalendars import KTCalendar
+
+KTCalendar(country_code="IT").get_ktday("2025-12-24").is_extra_holiday     # True — country-wide
+KTCalendar(country_code="IT-MI").get_ktday("2025-12-24").is_extra_holiday  # True — inherited from IT
+KTCalendar(country_code="IT-MI").get_ktday("2025-12-09").is_extra_holiday  # True — Milan only
+KTCalendar(country_code="IT-RM").get_ktday("2025-12-09").is_extra_holiday  # False
+KTCalendar(country_code="GB-ENG").get_ktday("2025-01-03").is_extra_holiday # False — Scotland only
+```
+
+To keep subdivisions independent instead (no inheritance from the
+country), look up `country_calendar_code` alone.
+
+#### How overrides are applied
+
+Overrides are kept separate from the official holidays:
+
+* `KTDay.is_extra_holiday` is True for a date in the overrides;
+* `KTDay.is_holiday` and `KTCalendar.holidays` only reflect the
+  [holidays](https://pypi.org/project/holidays/) package, so they ignore
+  the overrides;
+* `KTDay.is_workday` is False for weekend days, holidays *and* extra
+  holidays, so `KTCalendar.get_work_days()` and `get_non_work_days()`
+  take the overrides into account.
+
+`is_extra_holiday` calls `get_holiday_overrides` once per check with
+`from_date` and `to_date` both set to that day, so keep the method cheap
+(e.g. cache any database or file lookup).
 
 !!! note "Migrating from `EXTRA_HOLIDAY_PROVIDER`"
 

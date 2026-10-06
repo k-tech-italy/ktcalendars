@@ -118,6 +118,11 @@ class CompanyConfiguration(AbstractConfiguration):
 export KTCALENDAR_CONFIG=mypackage.config.CompanyConfiguration
 ```
 
+`get_holiday_overrides` receives the calendar's country calendar code
+(e.g. `IT`, `IT-MI`, `GB-SCT`), so you can return different dates per
+country or subdivision. The extra dates show up in `is_extra_holiday` and
+make `is_workday` False; `is_holiday` only reflects the official calendar.
+
 See the [documentation](https://k-tech-italy.github.io/ktcalendars/) for
 configuration and usage, and the
 [changelog](https://github.com/k-tech-italy/ktcalendars/blob/master/CHANGELOG.md)
