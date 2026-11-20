@@ -1,4 +1,4 @@
-import datetime
+import datetime as dt
 import sys
 import types
 
@@ -17,9 +17,9 @@ from ktcalendars.days import KTDay
 class CompanyClosures(AbstractConfiguration):
     closures_by_country = {
         'GB': {
-            datetime.date(2025, 12, 24): 'Christmas Eve closure',
-            datetime.date(2025, 12, 31): "New Year's Eve closure",
-            datetime.date(2026, 12, 24): 'Christmas Eve closure',
+            dt.date(2025, 12, 24): 'Christmas Eve closure',
+            dt.date(2025, 12, 31): "New Year's Eve closure",
+            dt.date(2026, 12, 24): 'Christmas Eve closure',
         },
     }
 
@@ -119,18 +119,18 @@ class TestHolidayOverrides:
         assert len(company_closures_config.get_holiday_overrides('GB-ENG')) == 3
 
     def test_from_date_only(self, company_closures_config):
-        overrides = company_closures_config.get_holiday_overrides('GB-ENG', from_date=datetime.date(2025, 12, 25))
-        assert list(overrides) == [datetime.date(2025, 12, 31), datetime.date(2026, 12, 24)]
+        overrides = company_closures_config.get_holiday_overrides('GB-ENG', from_date=dt.date(2025, 12, 25))
+        assert list(overrides) == [dt.date(2025, 12, 31), dt.date(2026, 12, 24)]
 
     def test_to_date_only(self, company_closures_config):
-        overrides = company_closures_config.get_holiday_overrides('GB-ENG', to_date=datetime.date(2025, 12, 31))
-        assert list(overrides) == [datetime.date(2025, 12, 24), datetime.date(2025, 12, 31)]
+        overrides = company_closures_config.get_holiday_overrides('GB-ENG', to_date=dt.date(2025, 12, 31))
+        assert list(overrides) == [dt.date(2025, 12, 24), dt.date(2025, 12, 31)]
 
     def test_both_bounds_inclusive(self, company_closures_config):
         overrides = company_closures_config.get_holiday_overrides(
-            'GB-ENG', from_date=datetime.date(2025, 12, 24), to_date=datetime.date(2025, 12, 31)
+            'GB-ENG', from_date=dt.date(2025, 12, 24), to_date=dt.date(2025, 12, 31)
         )
-        assert list(overrides) == [datetime.date(2025, 12, 24), datetime.date(2025, 12, 31)]
+        assert list(overrides) == [dt.date(2025, 12, 24), dt.date(2025, 12, 31)]
 
     def test_unknown_country_code_returns_empty_mapping(self, company_closures_config):
         assert company_closures_config.get_holiday_overrides('IT') == {}

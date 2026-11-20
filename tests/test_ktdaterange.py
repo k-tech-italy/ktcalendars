@@ -1,4 +1,4 @@
-import datetime
+import datetime  # noqa: ICN001 - `dt` is taken by ktcalendars.utils.dt
 import pickle
 import typing
 from contextlib import (

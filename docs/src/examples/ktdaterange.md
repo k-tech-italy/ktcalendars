@@ -24,12 +24,12 @@ date string — plus `None` for an unbounded side. A range can also be built
 as a copy of another `DateRange`:
 
 ```python
-KTDateRange("2025-06-01", "2025-06-04")        # 2025-06-01 to 2025-06-03
+KTDateRange("2025-06-01", "2025-06-04")  # 2025-06-01 to 2025-06-03
 KTDateRange(datetime.date(2025, 6, 1), KTDay("2025-06-04"))
 KTDateRange(DateRange(datetime.date(2025, 6, 1), datetime.date(2025, 6, 4)))
-KTDateRange("2025-06-01", None)                # unbounded above
-KTDateRange()                                  # unbounded on both sides
-KTDateRange(empty=True)                        # the empty range
+KTDateRange("2025-06-01", None)  # unbounded above
+KTDateRange()  # unbounded on both sides
+KTDateRange(empty=True)  # the empty range
 ```
 
 `from_start_end` builds a range where **both** dates are included:
@@ -58,9 +58,9 @@ range produces keeps that calendar:
 
 ```python
 r = KTDateRange("2025-06-01", "2025-06-04", cal_country_code="IT")
-[day.is_holiday for day in r]           # [False, True, False] — 2025-06-02 is a holiday in IT
+[day.is_holiday for day in r]  # [False, True, False] — 2025-06-02 is a holiday in IT
 
-KTDateRange(r).ktcalendar is r.ktcalendar          # True — copies inherit the calendar
+KTDateRange(r).ktcalendar is r.ktcalendar  # True — copies inherit the calendar
 r.intersection("2025-06-02").ktcalendar is r.ktcalendar  # True — derived ranges too
 ```
 
@@ -76,12 +76,12 @@ equivalent `[)` range ending one day later:
 
 ```python
 r = KTDateRange("2025-06-01", "2025-06-10", bounds="[]")
-r.boundaries          # (datetime.date(2025, 6, 1), datetime.date(2025, 6, 10)) — as given
-r.upper_inc           # True
-"2025-06-10" in r     # True
-str(r)                # '[2025-06-01:2025-06-11)' — displayed in normalised [) form
+r.boundaries  # (datetime.date(2025, 6, 1), datetime.date(2025, 6, 10)) — as given
+r.upper_inc  # True
+"2025-06-10" in r  # True
+str(r)  # '[2025-06-01:2025-06-11)' — displayed in normalised [) form
 
-list(KTDateRange("2025-06-01", "2025-06-01"))    # [] — equal bounds with [) cover no days
+list(KTDateRange("2025-06-01", "2025-06-01"))  # [] — equal bounds with [) cover no days
 KTDateRange("2025-06-01", "2025-06-01").isempty  # False — only KTDateRange(empty=True) is empty
 ```
 
@@ -93,16 +93,16 @@ KTDateRange("2025-06-01", "2025-06-01").isempty  # False — only KTDateRange(em
 ```python
 r = KTDateRange("2025-06-01", "2025-06-04")
 
-"2025-06-03" in r                  # True
-datetime.date(2025, 6, 4) in r     # False — upper bound excluded
-list(r)                            # [K2025-06-01, K2025-06-02, K2025-06-03]
+"2025-06-03" in r  # True
+datetime.date(2025, 6, 4) in r  # False — upper bound excluded
+list(r)  # [K2025-06-01, K2025-06-02, K2025-06-03]
 
-r.boundaries                       # (datetime.date(2025, 6, 1), datetime.date(2025, 6, 4))
-str(r)                             # '[2025-06-01:2025-06-04)'
+r.boundaries  # (datetime.date(2025, 6, 1), datetime.date(2025, 6, 4))
+str(r)  # '[2025-06-01:2025-06-04)'
 str(KTDateRange("2025-06-01", None))  # '[2025-06-01:...)'
 
 list(KTDateRange("2025-06-01", None))  # TypeError — cannot iterate an unbounded range
-list(KTDateRange(empty=True))          # []
+list(KTDateRange(empty=True))  # []
 ```
 
 ## Comparisons
@@ -115,14 +115,14 @@ it:
 a = KTDateRange("2025-06-01", "2025-06-10")
 b = KTDateRange("2025-06-05", "2025-06-20")
 
-a.fully_lt("2025-06-10")   # True — the whole range is before that day
-a.fully_lt(b)              # False — they overlap
-a.fully_gt("2025-05-31")   # True — the whole range is after that day
+a.fully_lt("2025-06-10")  # True — the whole range is before that day
+a.fully_lt(b)  # False — they overlap
+a.fully_gt("2025-05-31")  # True — the whole range is after that day
 
-a.startsbefore(b)          # True
-b.startsafter(a)           # True
-a.endsbefore(b)            # True
-b.endsafter(a)             # True
+a.startsbefore(b)  # True
+b.startsafter(a)  # True
+a.endsbefore(b)  # True
+b.endsafter(a)  # True
 ```
 
 `precedes`, `follows` and `adjacent_to` check that two ranges touch at a
@@ -131,9 +131,9 @@ boundary without overlapping:
 ```python
 c = KTDateRange("2025-06-10", "2025-06-20")
 
-a.precedes(c)       # True — a ends exactly where c starts
-c.follows(a)        # True
-a.adjacent_to(c)    # True
+a.precedes(c)  # True — a ends exactly where c starts
+c.follows(a)  # True
+a.adjacent_to(c)  # True
 a.precedes("2025-06-10")  # True — adjacent to that day
 ```
 
@@ -143,14 +143,14 @@ a.precedes("2025-06-10")  # True — adjacent to that day
 a = KTDateRange("2025-06-01", "2025-06-10")
 b = KTDateRange("2025-06-05", "2025-06-20")
 
-a.contains("2025-06-05")                          # True
+a.contains("2025-06-05")  # True
 a.contains(KTDateRange("2025-06-02", "2025-06-05"))  # True
 KTDateRange("2025-06-02", "2025-06-05").contained_by(a)  # True
 
-a.overlap(b)               # True
+a.overlap(b)  # True
 a.overlap(KTDateRange("2025-06-10", "2025-06-20"))  # False — adjacent, not overlapping
 
-a.intersection(b)          # [2025-06-05:2025-06-10)
+a.intersection(b)  # [2025-06-05:2025-06-10)
 a.intersection("2025-06-05")  # [2025-06-05:2025-06-06)
 a.intersection(KTDateRange("2025-06-25", None))  # None — no overlap
 ```
@@ -175,11 +175,11 @@ follows nothing, contains only itself, and is contained by every range:
 empty = KTDateRange(empty=True)
 a = KTDateRange("2025-06-01", "2025-06-10")
 
-str(empty)             # 'empty'
-a.overlap(empty)       # False
-a.contains(empty)      # True
-empty.contains(a)      # False
+str(empty)  # 'empty'
+a.overlap(empty)  # False
+a.contains(empty)  # True
+empty.contains(a)  # False
 empty.contained_by(a)  # True
-a.adjacent_to(empty)   # False
+a.adjacent_to(empty)  # False
 a.intersection(empty)  # None
 ```
