@@ -32,8 +32,8 @@ from ktcalendars import KTCalendar
 
 cal = KTCalendar(country_code="IT")
 day = cal.get_ktday("2025-06-02")  # Festa della Repubblica
-day.is_holiday                     # True
-day.is_workday                     # False
+day.is_holiday  # True
+day.is_workday  # False
 cal.get_work_days("2025-06-01", "2025-06-08")
 # [K2025-06-03, K2025-06-04, K2025-06-05, K2025-06-06]
 ```
@@ -43,34 +43,34 @@ cal.get_work_days("2025-06-01", "2025-06-08")
 ```python
 from ktcalendars import KTDay
 
-day = KTDay("2025-06-02")   # also "2025/06/02", "20250602", a date, a KTDay or None (today)
-day.day_of_week             # 'Monday'
-day + 7                     # K2025-06-09
-day - KTDay("2025-05-31")   # 2 (days)
-day == "2025-06-02"         # True
+day = KTDay("2025-06-02")  # also "2025/06/02", "20250602", a date, a KTDay or None (today)
+day.day_of_week  # 'Monday'
+day + 7  # K2025-06-09
+day - KTDay("2025-05-31")  # 2 (days)
+day == "2025-06-02"  # True
 list(KTDay("2025-06-01").range_to("2025-06-03"))
 # [K2025-06-01, K2025-06-02, K2025-06-03]
 
 day = KTDay("2025-06-01", cal_country_code="IT")
-(day + 1).is_holiday        # True — derived days keep the calendar (2025-06-02 is an IT holiday)
+(day + 1).is_holiday  # True — derived days keep the calendar (2025-06-02 is an IT holiday)
 ```
 
 ### Weekend days per country
 
 ```python
-KTCalendar(country_code="EG").weekend_days   # (4, 5) — Friday and Saturday
-KTCalendar(country_code="IT").weekend_days   # (5, 6) — Saturday and Sunday
+KTCalendar(country_code="EG").weekend_days  # (4, 5) — Friday and Saturday
+KTCalendar(country_code="IT").weekend_days  # (5, 6) — Saturday and Sunday
 
 cal = KTCalendar(country_code="IT", weekends=(6,))  # Sunday-only weekend
-cal.get_ktday("2025-06-07").is_weekend       # False (a Saturday)
+cal.get_ktday("2025-06-07").is_weekend  # False (a Saturday)
 ```
 
 ### Week and month iteration
 
 ```python
 cal = KTCalendar(country_code="IT")
-cal.week_for("2025-06-04")           # (K2025-06-02, K2025-06-08)
-list(cal.iter_week("2025-06-04"))    # the seven days of that week
+cal.week_for("2025-06-04")  # (K2025-06-02, K2025-06-08)
+list(cal.iter_week("2025-06-04"))  # the seven days of that week
 list(cal.month_weeks_days(2025, 6))  # complete weeks covering June 2025
 ```
 
@@ -83,18 +83,18 @@ normalise inclusivity internally:
 ```python
 from ktcalendars.ranges import KTDateRange
 
-r = KTDateRange("2025-06-01", "2025-06-04")           # upper bound excluded
-list(r)                                               # [K2025-06-01, K2025-06-02, K2025-06-03]
+r = KTDateRange("2025-06-01", "2025-06-04")  # upper bound excluded
+list(r)  # [K2025-06-01, K2025-06-02, K2025-06-03]
 KTDateRange.from_start_end("2025-06-01", "2025-06-03")  # both bounds included, covers the same days
 
-"2025-06-03" in r                                     # True
-r.overlap(KTDateRange("2025-06-03", "2025-06-10"))    # True
-r.intersection(("2025-06-03", "2025-06-10"))          # [2025-06-03:2025-06-04)
-r.precedes("2025-06-04")                              # True — adjacent, just before that day
+"2025-06-03" in r  # True
+r.overlap(KTDateRange("2025-06-03", "2025-06-10"))  # True
+r.intersection(("2025-06-03", "2025-06-10"))  # [2025-06-03:2025-06-04)
+r.precedes("2025-06-04")  # True — adjacent, just before that day
 
 # Ranges are calendar-aware, like KTDay
 r = KTDateRange("2025-06-01", "2025-06-04", cal_country_code="IT")
-[day.is_holiday for day in r]                         # [False, True, False] — days keep the calendar
+[day.is_holiday for day in r]  # [False, True, False] — days keep the calendar
 ```
 
 ### Company-specific holidays

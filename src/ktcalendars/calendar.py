@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 from calendar import Calendar
 from typing import TYPE_CHECKING, TypedDict
 
@@ -69,7 +69,7 @@ class KTCalendar(Calendar):
         """
         return get_configuration().get_default_country_code()
 
-    def get_ktday(self, day: KTDay | datetime.date | str | None = None, **kwargs: object) -> KTDay:
+    def get_ktday(self, day: KTDay | dt.date | str | None = None, **kwargs: object) -> KTDay:
         """Return a calendar-aware KTDay instance."""
         return KTDay(day=day, ktcalendar=self, **kwargs)
 
@@ -89,11 +89,9 @@ class KTCalendar(Calendar):
         (Monday and Tuesday are outside of the month in the example)
         """
         for x in super().itermonthdays(year, month):
-            yield KTDay(datetime.date(year, month, x), ktcalendar=self) if x else None
+            yield KTDay(dt.date(year, month, x), ktcalendar=self) if x else None
 
-    def iter_dates(
-        self, from_date: KTDay | datetime.date | str, to_date: KTDay | datetime.date | str
-    ) -> Iterator[KTDay]:
+    def iter_dates(self, from_date: KTDay | dt.date | str, to_date: KTDay | dt.date | str) -> Iterator[KTDay]:
         """Iterate over all dates between from_date and to_date."""
         start = KTDay(from_date)
         end = KTDay(to_date)
@@ -102,25 +100,21 @@ class KTCalendar(Calendar):
         delta_days = (end.date - start.date).days
 
         for i in range(delta_days + 1):
-            yield KTDay(start.date + datetime.timedelta(days=i), ktcalendar=self)
+            yield KTDay(start.date + dt.timedelta(days=i), ktcalendar=self)
 
-    def get_work_days(
-        self, from_date: KTDay | datetime.date | str, to_date: KTDay | datetime.date | str
-    ) -> Iterable[KTDay]:
+    def get_work_days(self, from_date: KTDay | dt.date | str, to_date: KTDay | dt.date | str) -> Iterable[KTDay]:
         """Iterate over all working days between from_date and to_date."""
         for day in self.iter_dates(from_date, to_date):
             if day.is_workday:
                 yield day
 
-    def get_non_work_days(
-        self, from_date: KTDay | datetime.date | str, to_date: KTDay | datetime.date | str
-    ) -> Iterable[KTDay]:
+    def get_non_work_days(self, from_date: KTDay | dt.date | str, to_date: KTDay | dt.date | str) -> Iterable[KTDay]:
         """Iterate over all non-working days between from_date and to_date."""
         for day in self.iter_dates(from_date, to_date):
             if not day.is_workday:
                 yield day
 
-    def week_for(self, date: KTDay | datetime.date | str | None = None) -> tuple[KTDay, KTDay]:
+    def week_for(self, date: KTDay | dt.date | str | None = None) -> tuple[KTDay, KTDay]:
         """Return the start and end date of the week for the given date.
 
         If no date is given, the current date is used.
@@ -130,7 +124,7 @@ class KTCalendar(Calendar):
             date + relativedelta(weekday=SU), ktcalendar=self
         )
 
-    def iter_week(self, date: datetime.date | str | None = None) -> Iterator[KTDay]:
+    def iter_week(self, date: dt.date | str | None = None) -> Iterator[KTDay]:
         """Iterate over all dates in the week for the given date.
 
         If no date is given, the current date is used.

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 import typing
 
 from dateutil import relativedelta
@@ -18,18 +18,18 @@ if typing.TYPE_CHECKING:
     from ktcalendars.types import KTDayType
 
 
-def _lo(period: Range[datetime.date]) -> datetime.date:
+def _lo(period: Range[dt.date]) -> dt.date:
     """Return the canonical inclusive lower bound, with an infinite bound replaced by datetime.date.min."""
     if period.lower is None:
-        return datetime.date.min
-    return period.lower if period.lower_inc else period.lower + datetime.timedelta(days=1)
+        return dt.date.min
+    return period.lower if period.lower_inc else period.lower + dt.timedelta(days=1)
 
 
-def _hi(period: Range[datetime.date]) -> datetime.date:
+def _hi(period: Range[dt.date]) -> dt.date:
     """Return the canonical exclusive upper bound, with an infinite bound replaced by datetime.date.max."""
-    if period.upper is None or (period.upper_inc and period.upper == datetime.date.max):
-        return datetime.date.max
-    return period.upper + datetime.timedelta(days=1) if period.upper_inc else period.upper
+    if period.upper is None or (period.upper_inc and period.upper == dt.date.max):
+        return dt.date.max
+    return period.upper + dt.timedelta(days=1) if period.upper_inc else period.upper
 
 
 class KTDateRange(DateRange):
@@ -55,7 +55,7 @@ class KTDateRange(DateRange):
 
     def __init__(
         self,
-        lower: Range[datetime.date] | KTDayType | None = None,
+        lower: Range[dt.date] | KTDayType | None = None,
         upper: KTDayType | None = None,
         bounds: str = '[)',
         empty: bool = False,
@@ -99,7 +99,7 @@ class KTDateRange(DateRange):
 
     @staticmethod
     def gaps(
-        ranges: Iterable[Range[datetime.date] | KTDayType],
+        ranges: Iterable[Range[dt.date] | KTDayType],
         start_date: KTDayType,
         end_date: KTDayType,
         ktcalendar: KTCalendar | None = None,
@@ -124,7 +124,7 @@ class KTDateRange(DateRange):
 
     def _as_range(
         self,
-        other: Range[datetime.date] | KTDayType | tuple[KTDayType | None, KTDayType | None] | list[KTDayType | None],
+        other: Range[dt.date] | KTDayType | tuple[KTDayType | None, KTDayType | None] | list[KTDayType | None],
     ) -> KTDateRange:
         """Coerce `other` to a KTDateRange bound to this range's calendar.
 
@@ -138,79 +138,79 @@ class KTDateRange(DateRange):
             return KTDateRange(*other, ktcalendar=self.ktcalendar)
         return KTDateRange.from_start_end(other, other, ktcalendar=self.ktcalendar)
 
-    def fully_lt(self, other: Range[datetime.date] | KTDayType) -> bool:
+    def fully_lt(self, other: Range[dt.date] | KTDayType) -> bool:
         """Return True if the given date range is fully before the other."""
         other = self._as_range(other)
         if self.isempty or other.isempty:
             return False
         return _hi(self) <= _lo(other)
 
-    def fully_gt(self, other: Range[datetime.date] | KTDayType) -> bool:
+    def fully_gt(self, other: Range[dt.date] | KTDayType) -> bool:
         """Return True if the given date range is fully after the other."""
         other = self._as_range(other)
         if self.isempty or other.isempty:
             return False
         return _lo(self) >= _hi(other)
 
-    def startsbefore(self, other: Range[datetime.date] | KTDayType) -> bool:
+    def startsbefore(self, other: Range[dt.date] | KTDayType) -> bool:
         """Return True if the given date range start date is before the other's."""
         other = self._as_range(other)
         if self.isempty or other.isempty:
             return False
         return _lo(self) < _lo(other)
 
-    def startsafter(self, other: Range[datetime.date] | KTDayType) -> bool:
+    def startsafter(self, other: Range[dt.date] | KTDayType) -> bool:
         """Return True if the given date range start date is after the other's."""
         other = self._as_range(other)
         if self.isempty or other.isempty:
             return False
         return _lo(self) > _lo(other)
 
-    def endsbefore(self, other: Range[datetime.date] | KTDayType) -> bool:
+    def endsbefore(self, other: Range[dt.date] | KTDayType) -> bool:
         """Return True if the given date range end date is before the other's."""
         other = self._as_range(other)
         if self.isempty or other.isempty:
             return False
         return _hi(self) < _hi(other)
 
-    def endsafter(self, other: Range[datetime.date] | KTDayType) -> bool:
+    def endsafter(self, other: Range[dt.date] | KTDayType) -> bool:
         """Return True if the given date range end date is after the other's."""
         other = self._as_range(other)
         if self.isempty or other.isempty:
             return False
         return _hi(self) > _hi(other)
 
-    def precedes(self, other: Range[datetime.date] | KTDayType) -> bool:
+    def precedes(self, other: Range[dt.date] | KTDayType) -> bool:
         """Return True if the given date range is adjacent and precedes the other."""
         other = self._as_range(other)
         if self.isempty or other.isempty:
             return False
         return _hi(self) == _lo(other)
 
-    def follows(self, other: Range[datetime.date] | KTDayType) -> bool:
+    def follows(self, other: Range[dt.date] | KTDayType) -> bool:
         """Return True if the given date range is adjacent and follows the other."""
         other = self._as_range(other)
         if self.isempty or other.isempty:
             return False
         return _lo(self) == _hi(other)
 
-    def as_dates(self) -> tuple[datetime.date | None, datetime.date | None]:
+    def as_dates(self) -> tuple[dt.date | None, dt.date | None]:
         """Return the object as a PG DateRange replacing infinite boundaries with datetime.date.min/max."""
         if self.isempty:
             raise ValueError('Unable to extract dates: date range is empty')
         lower = (
-            datetime.date.min
+            dt.date.min
             if self.lower_inf
             else (self.lower + relativedelta.relativedelta(days=0 if self.lower_inc else 1))
         )
         upper = (
-            datetime.date.max
+            dt.date.max
             if self.upper_inf
             else (self.upper - relativedelta.relativedelta(days=0 if self.upper_inc else 1))
         )
         return (lower, upper)
 
-    def contains(self, other: Range[datetime.date] | KTDayType) -> bool:
+    def contains(self, other: Range[dt.date] | KTDayType) -> bool:
         """Check if range contains other range (any range contains the empty range)."""
         other = self._as_range(other)
         if other.isempty:
@@ -219,27 +219,27 @@ class KTDateRange(DateRange):
             return False
         return _lo(self) <= _lo(other) and _hi(self) >= _hi(other)
 
-    def contained_by(self, other: Range[datetime.date] | KTDayType) -> bool:
+    def contained_by(self, other: Range[dt.date] | KTDayType) -> bool:
         """Check if range is contained by other range."""
         return self._as_range(other).contains(self)
 
-    def overlap(self, other: Range[datetime.date] | KTDayType) -> bool:
+    def overlap(self, other: Range[dt.date] | KTDayType) -> bool:
         """Check if range is overlapping other range (the empty range overlaps nothing)."""
         other = self._as_range(other)
         if self.isempty or other.isempty:
             return False
         return _lo(self) < _hi(other) and _lo(other) < _hi(self)
 
-    def adjacent_to(self, other: Range[datetime.date] | KTDayType) -> bool:
+    def adjacent_to(self, other: Range[dt.date] | KTDayType) -> bool:
         """Check if range is adjacent to other range (touches at a boundary without overlapping)."""
         return self.precedes(other) or self.follows(other)
 
     @property
-    def boundaries(self) -> tuple[datetime.date | None, datetime.date | None]:
+    def boundaries(self) -> tuple[dt.date | None, dt.date | None]:
         """Return the range's boundaries."""
         return self.lower, self.upper
 
-    def intersection(self, other: Range[datetime.date] | KTDayType) -> KTDateRange | None:
+    def intersection(self, other: Range[dt.date] | KTDayType) -> KTDateRange | None:
         """Return the intersection with the other range, or None if they do not overlap."""
         other = self._as_range(other)
         if self.isempty or other.isempty:
@@ -249,8 +249,8 @@ class KTDateRange(DateRange):
         if lower >= upper:
             return None
         return KTDateRange(
-            None if lower == datetime.date.min else lower,
-            None if upper == datetime.date.max else upper,
+            None if lower == dt.date.min else lower,
+            None if upper == dt.date.max else upper,
             ktcalendar=self.ktcalendar,
         )
 
@@ -268,7 +268,7 @@ class KTDateRange(DateRange):
         if self.isempty:
             return
         lower, upper = _lo(self), _hi(self)
-        if lower == datetime.date.min or upper == datetime.date.max:
+        if lower == dt.date.min or upper == dt.date.max:
             raise TypeError('Cannot iterate over unbounded range')
         day = KTDay(lower, ktcalendar=self.ktcalendar)
         for x in range((upper - lower).days):
@@ -282,6 +282,6 @@ class KTDateRange(DateRange):
         if self.isempty:
             return 'empty'
         lower, upper = _lo(self), _hi(self)
-        res = f'[{lower:%Y-%m-%d}:' if lower != datetime.date.min else '(...:'
-        res += f'{upper:%Y-%m-%d})' if upper != datetime.date.max else '...)'
+        res = f'[{lower:%Y-%m-%d}:' if lower != dt.date.min else '(...:'
+        res += f'{upper:%Y-%m-%d})' if upper != dt.date.max else '...)'
         return res

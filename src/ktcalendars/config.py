@@ -10,7 +10,7 @@ import typing
 import warnings
 
 if typing.TYPE_CHECKING:
-    import datetime
+    import datetime as dt
 
 __all__ = [
     "AbstractConfiguration",
@@ -33,9 +33,9 @@ class AbstractConfiguration(abc.ABC):
     def get_holiday_overrides(
         self,
         country_calendar_code: str,
-        from_date: datetime.date | None = None,
-        to_date: datetime.date | None = None,
-    ) -> dict[datetime.date, str]:
+        from_date: dt.date | None = None,
+        to_date: dt.date | None = None,
+    ) -> dict[dt.date, str]:
         """Return the holiday overrides for a country calendar code as a date → name mapping.
 
         Overrides are additive: they are merged on top of the holidays
@@ -72,9 +72,9 @@ class DefaultConfiguration(AbstractConfiguration):
     def get_holiday_overrides(
         self,
         country_calendar_code: str,
-        from_date: datetime.date | None = None,
-        to_date: datetime.date | None = None,
-    ) -> dict[datetime.date, str]:
+        from_date: dt.date | None = None,
+        to_date: dt.date | None = None,
+    ) -> dict[dt.date, str]:
         """Return no holiday overrides."""
         return {}
 

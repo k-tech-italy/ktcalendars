@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import datetime
+import datetime  # noqa: ICN001 - `dt` is taken by ktcalendars.utils.dt
 import typing
 
 from dateutil.relativedelta import relativedelta

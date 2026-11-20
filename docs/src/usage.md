@@ -169,11 +169,11 @@ class CompanyConfiguration(AbstractConfiguration):
 ```python
 from ktcalendars import KTCalendar
 
-KTCalendar(country_code="IT").get_ktday("2025-12-24").is_extra_holiday     # True — country-wide
+KTCalendar(country_code="IT").get_ktday("2025-12-24").is_extra_holiday  # True — country-wide
 KTCalendar(country_code="IT-MI").get_ktday("2025-12-24").is_extra_holiday  # True — inherited from IT
 KTCalendar(country_code="IT-MI").get_ktday("2025-12-09").is_extra_holiday  # True — Milan only
 KTCalendar(country_code="IT-RM").get_ktday("2025-12-09").is_extra_holiday  # False
-KTCalendar(country_code="GB-ENG").get_ktday("2025-01-03").is_extra_holiday # False — Scotland only
+KTCalendar(country_code="GB-ENG").get_ktday("2025-01-03").is_extra_holiday  # False — Scotland only
 ```
 
 To keep subdivisions independent instead (no inheritance from the
@@ -222,12 +222,12 @@ calendar of the day they came from:
 from ktcalendars import KTDay
 
 day = KTDay("2025-06-02", cal_country_code="IT")
-day.day_of_week      # 'Monday'
-day.week_of_year     # 23
-day + 7              # K2025-06-09
+day.day_of_week  # 'Monday'
+day.week_of_year  # 23
+day + 7  # K2025-06-09
 day - KTDay("2025-05-31")  # 2 (days)
-day.is_holiday       # True (Festa della Repubblica)
-day.is_workday       # False
+day.is_holiday  # True (Festa della Repubblica)
+day.is_workday  # False
 ```
 
 See the [KTDay examples](examples/ktday.md) for more.
@@ -290,15 +290,15 @@ equivalent `[)` range ending one day later:
 ```python
 from ktcalendars.ranges import KTDateRange
 
-KTDateRange("2025-06-01", "2025-06-04")                # 2025-06-01 to 2025-06-03
+KTDateRange("2025-06-01", "2025-06-04")  # 2025-06-01 to 2025-06-03
 KTDateRange.from_start_end("2025-06-01", "2025-06-03")  # covers the same days, both bounds included
-KTDateRange("2025-06-01", None)                        # unbounded above
-list(KTDateRange("2025-06-01", "2025-06-01"))          # [] — equal bounds with [) cover no days
+KTDateRange("2025-06-01", None)  # unbounded above
+list(KTDateRange("2025-06-01", "2025-06-01"))  # [] — equal bounds with [) cover no days
 
 r = KTDateRange("2025-06-01", "2025-06-04")
-"2025-06-03" in r          # True
-"2025-06-04" in r          # False — upper bound excluded
-list(r)                    # [K2025-06-01, K2025-06-02, K2025-06-03]
+"2025-06-03" in r  # True
+"2025-06-04" in r  # False — upper bound excluded
+list(r)  # [K2025-06-01, K2025-06-02, K2025-06-03]
 ```
 
 The comparison, containment and intersection helpers accept another range or
@@ -308,11 +308,11 @@ a single day (treated as the one-day range covering it):
 a = KTDateRange("2025-06-01", "2025-06-10")
 b = KTDateRange("2025-06-05", "2025-06-20")
 
-a.overlap(b)               # True
-a.intersection(b)          # [2025-06-05:2025-06-10)
-a.contains("2025-06-05")   # True
-a.fully_lt("2025-06-15")   # True — the whole range is before that day
-a.precedes(b.lower)        # False;  a.precedes("2025-06-10") is True (adjacent)
+a.overlap(b)  # True
+a.intersection(b)  # [2025-06-05:2025-06-10)
+a.contains("2025-06-05")  # True
+a.fully_lt("2025-06-15")  # True — the whole range is before that day
+a.precedes(b.lower)  # False;  a.precedes("2025-06-10") is True (adjacent)
 a.adjacent_to(KTDateRange("2025-06-10", "2025-06-20"))  # True
 ```
 
